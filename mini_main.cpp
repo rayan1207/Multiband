@@ -74,7 +74,7 @@ int main(int argc, char** argv)
 	 
     std::vector<double> yy={0.69907,0.664234,0.1815454,0.1815454,0.1815454,0.1815454,0.664234,0.674536};
 	
-	 std::vector<double> zz = {0.582,-0.667};
+	 std::vector<double> zz = {-0.582536573,0.667062741};
 	
 	
 
@@ -91,7 +91,7 @@ int main(int argc, char** argv)
 	
 	std::cout<<"First need to generate an instance of the AmiGraph library"<<std::endl;
 	std::this_thread::sleep_for(std::chrono::milliseconds(150));
-		int seed=3;	
+		int seed=1;	
 		std::cout<< "Constructing AmiGraph object using seed: "<<seed <<" " <<std::endl;
 		AmiGraph g(AmiBase::Sigma, seed);	
 
@@ -136,7 +136,7 @@ for(int i=0; i<extern_list.size();i++){
 	std::this_thread::sleep_for(std::chrono::milliseconds(1500));
 	
 ///Rayan function	
-	AmiGraph::graph_t  gself2 = ggm[3][0].graph_vec[0];
+	AmiGraph::graph_t  gself2 = ggm[2][0].graph_vec[0];
 
 
 	
@@ -159,8 +159,8 @@ for(int i=0; i<extern_list.size();i++){
 	/// provide a second order graph in gself2, and it fills in the internal fermionic edge pointed in o2fedge,
 	//all the possible species o2fedge_species(8)  in the same order o2 fedge // finally o2int_species contains interactions
 	//that give rise to o2fedge-species.
-	int num = 0;
-	mb.solve_multiband_3(gself2,o2fedge,o2fedge_species,o2int_species);
+	int  ord = 2;
+	mb.solve_multiband(gself2,o2fedge,o2fedge_species,o2int_species,ord);
 	
 	
 	
@@ -169,7 +169,7 @@ for(int i=0; i<extern_list.size();i++){
 	std::cout<<"Number of internal fermionic line is:" <<o2fedge.size()<< std::endl;
 	std::cout<<"different number of possible species arrangements are: " <<o2fedge_species.size() <<std::endl;
 	std::cout<<"total number possible U_abcd interaction printed above: " <<o2int_species.size() <<"\n \n";
-	std::cout<< " total number of cycles " << num << std::endl;
+	//std::cout<< " total number of cycles " << num << std::endl;
     std::cout <<"printing the band index for each internal fermionic edge" <<std::endl;
 	
      for (int i = 0; i < o2fedge_species.size();i++){
@@ -228,29 +228,6 @@ for(int i=0; i<extern_list.size();i++){
 	}
 	///evaluation using AMI _-_-_-_-_-*/
 
-/*
-AmiBase:: g_struct g1 ( Epsilon[0] , Alpha[0]);
-AmiBase:: g_struct g2 ( Epsilon[1] , Alpha[1]); 
-AmiBase:: g_struct g3 ( Epsilon[2] , Alpha[2] ); 
-AmiBase:: g_prod_t R0 ={ g1 ,g2 , g3 };
-print2d({g1.eps_,g1.alpha_});
-
-print2d({g2.eps_,g2.alpha_}); 
-print2d({g3.eps_,g3.alpha_});*/
-
-/*AmiBase::alpha_t alpha_1={1,0,0};
-AmiBase::alpha_t alpha_2={0,1,0};
-AmiBase::alpha_t alpha_3={-1,1,1};
-
-//defining epsilon's
-AmiBase::epsilon_t epsilon_1={1,0,0};
-AmiBase::epsilon_t epsilon_2={0,1,0};
-AmiBase::epsilon_t epsilon_3={0,0,1};
-
-AmiBase::g_struct g1(epsilon_1,alpha_1);
-AmiBase::g_struct g2(epsilon_2,alpha_2);
-AmiBase::g_struct g3(epsilon_3,alpha_3);
-AmiBase::g_prod_t R0={g1,g2,g3};*/
 
 AmiBase::g_struct gs[3] = {{Epsilon[0],Alpha[0]},{Epsilon[1],Alpha[1]},{Epsilon[2],Alpha[2]} };
 
@@ -278,10 +255,10 @@ frequency.push_back(std::complex<double>(0,M_PI));
 double E1 =0.5825365736653964;
 double E2 = -0.6670627411988165;
 AmiBase::energy_t ee = {E2,E2,E1};
-AmiBase::ami_vars external (energy_V[3],frequency , 1.00 );
+AmiBase::ami_vars external (energy_V[0],frequency , 1.00 );
 std::cout<<"using interaction  is \n" <<std::endl;
 
-for (auto i : energy_V[3]){std::cout << i;}
+for (auto i : energy_V[0]){std::cout << i;}
 std::complex < double > calc_result = ami.evaluate(test_amiparms,R_array ,P_array,S_array,external);
 std::cout<<"result is \n" <<std::endl;
 std::cout<< calc_result<<std::endl;	

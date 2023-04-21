@@ -42,7 +42,7 @@ mband(std::vector<std::vector<int>> _interaction_legs,  std::vector<double> _int
 void assign_label(AmiGraph::graph_t &g1, AmiGraph::edge_vector_t edge,vector<int> vector);
 std::vector<std::vector<int>>  findmatch(std::vector<int> v1);
 std::vector<int> generate_edge_species(AmiGraph::graph_t &g, AmiGraph::edge_vector_t edge);
-void solve_multiband_4(AmiGraph::graph_t &graph,AmiGraph::edge_vector_t &fermionic_edge,std::vector<std::vector<int>> &fermionic_species,std::vector<std::vector<std::vector<int>>> &interaction_species,int &num);
+void solve_multiband_4(AmiGraph::graph_t &graph,AmiGraph::edge_vector_t &fermionic_edge,std::vector<std::vector<int>> &fermionic_species,std::vector<std::vector<std::vector<int>>> &interaction_species);
 void solve_multiband_3(AmiGraph::graph_t &graph,AmiGraph::edge_vector_t &fermionic_edge,std::vector<std::vector<int>> &fermionic_species,std::vector<std::vector<std::vector<int>>> &interaction_species);
 void solve_multiband_2(AmiGraph::graph_t &graph,AmiGraph::edge_vector_t &fermionic_edge,std::vector<std::vector<int>> &fermionic_species,std::vector<std::vector<std::vector<int>>> &interaction_species);
 //void solve_multiband_234(AmiGraph::graph_t graph,std::vector<std::vector<int>> interaction_leg,int ord);
@@ -55,7 +55,7 @@ void  generate_eps_alpha(AmiGraph::graph_t &graph,AmiGraph::edge_vector_t &fermi
 std::vector<std::vector<int>>  &alpha);
 //template<typename T>
 //void print2d(const std::vector<std::vector<T>>& vec);
-
+void solve_multiband(AmiGraph::graph_t &graph,AmiGraph::edge_vector_t &fermionic_edge,std::vector<std::vector<int>> &fermionic_species,std::vector<std::vector<std::vector<int>>> &interaction_species,int ord);
 
 ///
 
@@ -64,7 +64,7 @@ std::vector<double> sumVectors(std::vector<std::vector<double>> vectors);
 std::vector<std::complex<double>> convertToComplex(const std::vector<double> vec);
 std::vector<std::vector<double>>  band_to_hab(std::vector<std::vector<int>> band);
 std::vector<std::complex<double>> generate_ept(std::vector<std::vector<int>> epsilon, std::vector<double> band_value);
-
+void changeEqualNumbers(std::vector<double>& vec);
 };
 
 

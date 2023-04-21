@@ -163,7 +163,7 @@ void mband::print_assigned_species(std::vector<std::vector<std::vector<int>>> in
 	
 
 
-void mband::solve_multiband_4(AmiGraph::graph_t &graph,AmiGraph::edge_vector_t &fermionic_edge,std::vector<std::vector<int>> &fermionic_species,std::vector<std::vector<std::vector<int>>> &interaction_species,int &num){
+void mband::solve_multiband_4(AmiGraph::graph_t &graph,AmiGraph::edge_vector_t &fermionic_edge,std::vector<std::vector<int>> &fermionic_species,std::vector<std::vector<std::vector<int>>> &interaction_species){
     AmiGraph::edge_vector_t bvector;
 	std::vector<AmiGraph::edge_vector_t> int_vector;
 	g.find_bosonic_edges(graph,bvector);
@@ -202,7 +202,7 @@ void mband::solve_multiband_4(AmiGraph::graph_t &graph,AmiGraph::edge_vector_t &
 						std::vector<std::vector<int>> possible_species_4 = mband::findmatch(initial_species_4);					
 						if (!possible_species_4.empty()){
 							for (int l = 0; l < possible_species_4.size();l++){
-								num++;
+								//num++
                             //mband::print_match(possible_species_4[l],4);
                             mband::assign_label(graph,int_vector[3],initial_species_4);							
 							mband::assign_label(graph,int_vector[3],possible_species_4[l]);
@@ -374,6 +374,16 @@ std::vector<AmiBase::alpha_t>  &alpha) {
 	
 	
 }
+void mband::solve_multiband(AmiGraph::graph_t &graph,AmiGraph::edge_vector_t &fermionic_edge,std::vector<std::vector<int>> &fermionic_species,std::vector<std::vector<std::vector<int>>> &interaction_species, int ord){
+if (ord == (int) 2){
+ mband::solve_multiband_2(graph,fermionic_edge,fermionic_species,interaction_species);}
+if (ord == (int) 3){
+ mband::solve_multiband_3(graph,fermionic_edge,fermionic_species,interaction_species);}
+if (ord ==(int) 4){
+ mband::solve_multiband_4(graph,fermionic_edge,fermionic_species,interaction_species);}
+else{
+std::cout << "this order not possible";}
+}
 /*
 template<typename T>
 void mband::print2d(const std::vector<std::vector<T>>& vec)
@@ -388,18 +398,8 @@ void mband::print2d(const std::vector<std::vector<T>>& vec)
 */
 
 
-/*
-void mband::solve_multiband_234(AmiGraph::graph_t graph,std::vector<std::vector<int>> mband::interaction_legs,int ord){
-if (ord ==2){
-void mband::solve_multiband_2(AmiGraph::graph_t graph,std::vector<std::vector<int>> mband::interaction_legs);}
-if (ord ==3){
-void mband::solve_multiband_3(AmiGraph::graph_t graph,std::vector<std::vector<int>> mband::interaction_legs);}
-if (ord ==4){
-void mband::solve_multiband_4(AmiGraph::graph_t graph,std::vector<std::vector<int>> mband::interaction_legs);}
-else{
-std::cout << "this order not possible";}
-}
-*/	
+
+
 		
 
 

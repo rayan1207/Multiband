@@ -1,5 +1,31 @@
 #include "mini_ami.hpp"
 
+void mband::changeEqualNumbers(std::vector<double>& vec) {
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_real_distribution<double> dist(-1, 1);
+    // Iterate over the vector
+    for (int i = 0; i < vec.size(); i++) {
+        // Check if the current element is equal to the next element
+        if (i + 1 < vec.size() && vec[i] == vec[i + 1]) {
+            // Find the end of the group of equal numbers
+            int j = i + 1;
+            while (j < vec.size() && vec[j] == vec[i]) {
+                j++;
+            }
+            j--;
+
+            // Reduce the values of the group by 0.1
+            for (int k = i; k <= j; k++) {
+                vec[k] = vec[k]+ dist(gen)*1e-7;
+            }
+
+            // Move to the next element after the group
+            i = j;
+        }
+    }
+}
+
 std::vector<double> mband::sumVectors(std::vector<std::vector<double>> vectors)
 {
     std::vector<double> sum(vectors[0].size(), 0);
@@ -56,6 +82,7 @@ std::vector<std::complex<double>> mband::generate_ept(std::vector<std::vector<in
 
     }
     std::vector<double> sum = mband::sumVectors(results);
+	changeEqualNumbers(sum);
 
 
     return mband::convertToComplex(sum);
