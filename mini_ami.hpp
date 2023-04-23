@@ -49,7 +49,7 @@ void solve_multiband_2(AmiGraph::graph_t &graph,AmiGraph::edge_vector_t &fermion
 void print_match(std::vector<int> vec,int ord);
 void reset_species(AmiGraph::graph_t &graph,std::vector<AmiGraph::edge_vector_t> int_vector);
 void print_assigned_species(std::vector<std::vector<std::vector<int>>> all_species);
-void find_interaction(AmiGraph::graph_t &graph, AmiGraph::edge_vector_t b_vector, std::vector<AmiGraph::edge_vector_t> &f_vector);
+void find_interaction(AmiGraph::graph_t &graph, AmiGraph::edge_vector_t &b_vector, std::vector<AmiGraph::edge_vector_t> &f_vector);
 void print_interactions(AmiGraph::graph_t &graph,AmiGraph::edge_vector_t b_vector, std::vector<AmiGraph::edge_vector_t> f_vector);
 void  generate_eps_alpha(AmiGraph::graph_t &graph,AmiGraph::edge_vector_t &fermionic_edge, std::vector<std::vector<int>> &ept, 
 std::vector<std::vector<int>>  &alpha);
@@ -64,7 +64,10 @@ std::vector<double> sumVectors(std::vector<std::vector<double>> vectors);
 std::vector<std::complex<double>> convertToComplex(const std::vector<double> vec);
 std::vector<std::vector<double>>  band_to_hab(std::vector<std::vector<int>> band);
 std::vector<std::complex<double>> generate_ept(std::vector<std::vector<int>> epsilon, std::vector<double> band_value);
-void changeEqualNumbers(std::vector<double>& vec);
+double perturb(double number);
+double Umatch(std::vector<std::vector<int>> int_matrix, std::vector<double> int_value, std::vector<std::vector<int>> int_species);
+std::vector<int> Hartee_fock_filter(AmiGraph::edge_vector_t &fermionic_edge);
+void filter(std::vector<std::vector<int>>& possible_species, const std::vector<double>& list);
 };
 
 

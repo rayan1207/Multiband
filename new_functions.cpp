@@ -8,10 +8,45 @@ AmiBase ami ;
 mband::mband(std::vector<std::vector<int>> _interaction_legs, std::vector<double> _int_values,std::vector<double> _energy)
 :  interaction_legs(_interaction_legs), int_values(_int_values),energy(_energy) {};
 
+std::vector<int> mband::Hartee_fock_filter(AmiGraph::edge_vector_t &fermionic_edge){
+	std::vector<int> equalIndices;
+	if (fermionic_edge[0] == fermionic_edge[1]){
+		equalIndices= {0,1};
+		return equalIndices;
+	}
+	
+	else if (fermionic_edge[2] == fermionic_edge[3]){
+		equalIndices= {2,3};
+		return equalIndices;
+		
+	}
+	if (fermionic_edge[0] == fermionic_edge[2]){
+		equalIndices= {0,2};
+		return equalIndices;
+	}
+	
+	else if (fermionic_edge[0] == fermionic_edge[3]){
+		equalIndices= {0,3};
+		return equalIndices;
+	}
+	if (fermionic_edge[1] == fermionic_edge[2]){
+		equalIndices= {1,2};
+		return equalIndices;
+	}
+	
+	else if (fermionic_edge[1] == fermionic_edge[3]){
+		equalIndices= {1,3};
+		return equalIndices;
+	}
+	else {
+		return  equalIndices;
+	}
+	
+	
+}
 
 
-
-void mband::find_interaction(AmiGraph::graph_t &graph, AmiGraph::edge_vector_t b_vector, std::vector<AmiGraph::edge_vector_t> &f_vector){
+void mband::find_interaction(AmiGraph::graph_t &graph, AmiGraph::edge_vector_t &b_vector, std::vector<AmiGraph::edge_vector_t> &f_vector){
 	//g.find_bosonic_edges(graph, b_vector);
 	boost::graph_traits<AmiGraph::graph_t>::in_edge_iterator iei, iedge_end;
     boost::graph_traits<AmiGraph::graph_t>::out_edge_iterator oei, oedge_end;
@@ -45,8 +80,7 @@ void mband::find_interaction(AmiGraph::graph_t &graph, AmiGraph::edge_vector_t b
 	v.clear();
 	  
 	}
-
-
+	
 
 	
 
@@ -377,25 +411,14 @@ std::vector<AmiBase::alpha_t>  &alpha) {
 void mband::solve_multiband(AmiGraph::graph_t &graph,AmiGraph::edge_vector_t &fermionic_edge,std::vector<std::vector<int>> &fermionic_species,std::vector<std::vector<std::vector<int>>> &interaction_species, int ord){
 if (ord == (int) 2){
  mband::solve_multiband_2(graph,fermionic_edge,fermionic_species,interaction_species);}
-if (ord == (int) 3){
+else if (ord == (int) 3){
  mband::solve_multiband_3(graph,fermionic_edge,fermionic_species,interaction_species);}
-if (ord ==(int) 4){
+else if (ord ==(int) 4){
  mband::solve_multiband_4(graph,fermionic_edge,fermionic_species,interaction_species);}
 else{
 std::cout << "this order not possible";}
 }
-/*
-template<typename T>
-void mband::print2d(const std::vector<std::vector<T>>& vec)
-{
-    for (const auto& row : vec) {
-        for (const auto& elem : row) {
-            std::cout << elem << " ";
-        }
-        std::cout << std::endl;
-    }
-}
-*/
+
 
 
 
