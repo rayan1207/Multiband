@@ -42,20 +42,20 @@ mband(std::vector<std::vector<int>> _interaction_legs,  std::vector<double> _int
 void assign_label(AmiGraph::graph_t &g1, AmiGraph::edge_vector_t edge,vector<int> vector);
 std::vector<std::vector<int>>  findmatch(std::vector<int> v1);
 std::vector<int> generate_edge_species(AmiGraph::graph_t &g, AmiGraph::edge_vector_t edge);
-void solve_multiband_4(AmiGraph::graph_t &graph,AmiGraph::edge_vector_t &fermionic_edge,std::vector<std::vector<int>> &fermionic_species,std::vector<std::vector<std::vector<int>>> &interaction_species,int &num);
+void solve_multiband_4(AmiGraph::graph_t &graph,AmiGraph::edge_vector_t &fermionic_edge,std::vector<std::vector<int>> &fermionic_species,std::vector<std::vector<std::vector<int>>> &interaction_species);
 void solve_multiband_3(AmiGraph::graph_t &graph,AmiGraph::edge_vector_t &fermionic_edge,std::vector<std::vector<int>> &fermionic_species,std::vector<std::vector<std::vector<int>>> &interaction_species);
 void solve_multiband_2(AmiGraph::graph_t &graph,AmiGraph::edge_vector_t &fermionic_edge,std::vector<std::vector<int>> &fermionic_species,std::vector<std::vector<std::vector<int>>> &interaction_species);
 //void solve_multiband_234(AmiGraph::graph_t graph,std::vector<std::vector<int>> interaction_leg,int ord);
 void print_match(std::vector<int> vec,int ord);
 void reset_species(AmiGraph::graph_t &graph,std::vector<AmiGraph::edge_vector_t> int_vector);
 void print_assigned_species(std::vector<std::vector<std::vector<int>>> all_species);
-void find_interaction(AmiGraph::graph_t &graph, AmiGraph::edge_vector_t b_vector, std::vector<AmiGraph::edge_vector_t> &f_vector);
+void find_interaction(AmiGraph::graph_t &graph, AmiGraph::edge_vector_t &b_vector, std::vector<AmiGraph::edge_vector_t> &f_vector);
 void print_interactions(AmiGraph::graph_t &graph,AmiGraph::edge_vector_t b_vector, std::vector<AmiGraph::edge_vector_t> f_vector);
 void  generate_eps_alpha(AmiGraph::graph_t &graph,AmiGraph::edge_vector_t &fermionic_edge, std::vector<std::vector<int>> &ept, 
 std::vector<std::vector<int>>  &alpha);
 //template<typename T>
 //void print2d(const std::vector<std::vector<T>>& vec);
-
+void solve_multiband(AmiGraph::graph_t &graph,AmiGraph::edge_vector_t &fermionic_edge,std::vector<std::vector<int>> &fermionic_species,std::vector<std::vector<std::vector<int>>> &interaction_species,int ord);
 
 ///
 
@@ -64,7 +64,10 @@ std::vector<double> sumVectors(std::vector<std::vector<double>> vectors);
 std::vector<std::complex<double>> convertToComplex(const std::vector<double> vec);
 std::vector<std::vector<double>>  band_to_hab(std::vector<std::vector<int>> band);
 std::vector<std::complex<double>> generate_ept(std::vector<std::vector<int>> epsilon, std::vector<double> band_value);
-
+double perturb(double number);
+double Umatch(std::vector<std::vector<int>> int_matrix, std::vector<double> int_value, std::vector<std::vector<int>> int_species);
+std::vector<int> Hartee_fock_filter(AmiGraph::edge_vector_t &fermionic_edge);
+void filter(std::vector<std::vector<int>>& possible_species, const std::vector<int>& list);
 };
 
 
