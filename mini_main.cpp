@@ -65,7 +65,7 @@ std::vector<double> readFile1(const char* filename, int n) {
 
         for (int i = 1; i < n; i++) {
             if (iss >> val) {
-                // Read and discard values until we get to the nth column
+               
             } else {
                 std::cerr << "Error: Could not read column " << n << " from file " << filename << std::endl;
                 return std::vector<double>();
@@ -73,7 +73,7 @@ std::vector<double> readFile1(const char* filename, int n) {
         }
 
         if (iss >> val) {
-            // Successfully read the nth column value, store it in the vector
+            
             columnValues.push_back(val);
         } else {
             std::cerr << "Error: Could not read column " << n << " from file " << filename << std::endl;
@@ -90,35 +90,21 @@ int main(int argc, char** argv)
 
 
     AmiBase ami;
-	std::vector<vector<int>> xx = {{1,1,1,1},{2,2,1,1},{2,1,2,1},{1,2,2,1},{2,1,1,2},{1,2,1,2},{1,1,2,2},{2,2,2,2}};
-    std::vector<vector<int>> hubbard = {{2,2,1,1},{1,1,2,2}};
+	
+	
+     std::vector<std::vector<int>> interaction = readFile("data.txt");
+	 std::vector<double> interaction_value = readFile1("data.txt",5);
+	 std::vector<double> band_energy = readFile1("data_h.txt",2);
+	
+	 /*
+	 std::vector<vector<int>> interaction = {{1,1,1,1},{2,2,1,1},{2,1,2,1},{1,2,2,1},{2,1,1,2},{1,2,1,2},{1,1,2,2},{2,2,2,2}};
+     std::vector<vector<int>> hubbard = {{2,2,1,1},{1,1,2,2}};
+     std::vector<double> interaction_value={0.69907,0.664234,0.1815454,0.1815454,0.1815454,0.1815454,0.664234,0.674536};
+	 //std::vector<double> yy={0.69907,0.4825,0.1815,-0.4825,-0.4825,0.1815,0.4825,0.6745};
+	 std::vector<double> band_energy = {0.5825365736653964,-0.6670627411988165};
+	*/
 
-	 //std::vector<std::vector<int>> xx = readFile("data.txt");
-	 //std::vector<double> yy = readFile1("data.txt",5);
-	 //std::vector<double> zz = readFile1("data_h.txt",2);
-	 
-	 
-	 
-    std::vector<double> yy={0.69907,0.664234,0.1815454,0.1815454,0.1815454,0.1815454,0.664234,0.674536};
-	
-	 std::vector<double> zz = {-0.5825365736653964,0.6670627411988165};
-	
-	
-
-	
-	std::cout<<"This will be a minimal working tutorial/example of AMI+libamigraph"<<std::endl;
-	print1d(yy);
-	std::this_thread::sleep_for(std::chrono::milliseconds(1800)); // Just pause for 2 seconds so user can follow 
-	
-	std::cout<<std::endl;
-	
-	
-	
-	//
-	
-	std::cout<<"First need to generate an instance of the AmiGraph library"<<std::endl;
-	std::this_thread::sleep_for(std::chrono::milliseconds(150));
-		int seed=3;	
+		int seed=2;	
 		std::cout<< "Constructing AmiGraph object using seed: "<<seed <<" " <<std::endl;
 		AmiGraph g(AmiBase::Sigma, seed);	
 
@@ -146,11 +132,7 @@ for(int i=0; i<extern_list.size();i++){
 	g.read_ggmp("../example_graphs/ggm_all/",ggm, max);
 	std::cout<<"Completed read"<<std::endl;
 
-	//g.mpi_print_ggm(ggm, 0);
-	
-	//g.ggm_remove_pairs(ggm,0); // remove the pair that was defined at third order - we don't need it for now 
-	//std::cout<<"Removed the cancelling pair - now they are in a group"<<std::endl;
-	g.mpi_print_ggm(ggm,0);
+	//g.mpi_print_ggm(ggm,0);
 	
 	
 	std::cout<<std::endl;
@@ -159,96 +141,84 @@ for(int i=0; i<extern_list.size();i++){
 	std::cout<<"Now lets label only the second order graphs "<<std::endl;
 	
 	g.ggm_label(ggm,0);
+	
 	std::cout<<"All done! That was easy!"<<std::endl;
 	std::this_thread::sleep_for(std::chrono::milliseconds(1500));
 	
 ///Rayan function	
-int  ord = 2;
-	AmiGraph::graph_t  gself2 = ggm[ord][0].graph_vec[0];
+int  ord = 3;
+	AmiGraph::graph_t  gself = ggm[ord][0].graph_vec[0];
     //AmiGraph::graph_t  gself = ggm[ord][1].graph_vec[0];
-
+    
 	
 	
 	std::cout<<"Lets check that a graph is labelled"<<std::endl;
-	g.print_all_edge_info(gself2);
+	g.print_all_edge_info(gself);
     
-	
-	mband mb(xx,yy,zz);
+	bool hf = true;
+	//construction 
+	mband mb(interaction,interaction_value,band_energy,hf);
 	std::cout<< mb.interaction_legs.size();
-	//mb.solve_multiband_2(ggm[2][0].graph_vec[0]);
-	//AmiGraph::edge_vector_t &fermionic_edge,std::vector<std::vector<int>> &fermionic_species,std::vector<std::vector<std::vector<int>>> &interaction_species
-	AmiGraph::edge_vector_t o2fedge;
-	/// contains possible band index for o2fedge( internal fermionic edge) in same order as o2 fedge
-    std::vector<std::vector<int>> o2fedge_species;
 	
-	std::vector<std::vector<std::vector<int>>> o2int_species;
-	std::vector<AmiBase::epsilon_t> Epsilon;
-	std::vector<AmiBase::alpha_t> Alpha;
-	/// provide a second order graph in gself2, and it fills in the internal fermionic edge pointed in o2fedge,
-	//all the possible species o2fedge_species(8)  in the same order o2 fedge // finally o2int_species contains interactions
-	//that give rise to o2fedge-species.
+	AmiGraph::edge_vector_t fermionic_edge;
+	/// contains possible band index for fermionic_edge( internal fermionic edge) in same order as o2 fedge
+    std::vector<std::vector<int>> fermionic_edge_species;
+	std::vector<std::vector<std::vector<int>>> interaction_species ;
 	
-	mb.solve_multiband(gself2,o2fedge,o2fedge_species,o2int_species,ord);
+	std::vector<std::vector<int>> external_line;
+	/// provide a second order graph in gself, and it fills in the internal fermionic edge in fermionic_edge vector,
+	//all the possible species fermionic_edge_species corresponding  to fermionic_edge vector
+	// finally interaction_species  contains interactions that give rise to fermionic_edge-species.
+	//
 	
-	
-
-	
-     	
-	
-	//std::cout<< " total number of cycles " << num << std::endl;
+	mb.solve_multiband(gself,fermionic_edge,fermionic_edge_species,interaction_species ,external_line);
+	std::this_thread::sleep_for(std::chrono::milliseconds(1500)); 
     std::cout <<"printing the band index for each internal fermionic edge" <<std::endl;
 	
-     for (int i = 0; i < o2fedge_species.size();i++){
+     for (int i = 0; i < fermionic_edge_species.size();i++){
 		 std::cout<< "(";
-		 for (int j = 0; j < o2fedge_species[i].size();j++){
-			 std::cout<<o2fedge_species[i][j];	 
+		 for (int j = 0; j < fermionic_edge_species[i].size();j++){
+			 std::cout<<fermionic_edge_species[i][j];	 
 		}
 	 std::cout<<")\n\n";
 
 	 };
 	 
 	 ///filling in vectors of epsilon and alpha based on labels
-	mb.generate_eps_alpha(gself2,o2fedge,Epsilon,Alpha);
+	std::vector<AmiBase::epsilon_t> Epsilon;
+	std::vector<AmiBase::alpha_t> Alpha;
+	mb.generate_eps_alpha(gself,fermionic_edge,Epsilon,Alpha);
 	
-	std::vector<std::vector<double>> kk = mb.band_to_hab(o2fedge_species);
-	std::vector<std::vector<std::complex<double> >> energy_V;
-	
-	for (auto vec: kk){
-		energy_V.push_back(mb.generate_ept(Epsilon, vec));
-		//convering energies to complex format for energy_t
-		//energy_V.push_back(mb.convertToComplex(vec));
+	std::vector<std::vector<double>> speciesToEnergy = mb.band_to_hab(fermionic_edge_species);
+	std::vector<std::vector<std::complex<double> >> energy_vector;
+	//  using the epsilon labels, we put the energies in correct place. e.g. energy_vector = e1[0,1,0] + e2[1,0,0] + e3[0,0,1] where 
+    // e1 may correspond to energy for band index 1, e2 energy for band index 2 and so on/	
+	for (auto vec: speciesToEnergy){
+		energy_vector.push_back(mb.generate_ept(Epsilon, vec));
+
 	}
-	 
-	
-      
-	  
-	 
-	 
-
-
-	 g.print_all_edge_info(gself2);	
+	 g.print_all_edge_info(gself);	
 	 
 	 
 	std::cout<<"Lets find the each edge and possible band indexes! \n";
 
-	for (int i=0;i <o2fedge.size();i++){	
-		g.print_edge_info(o2fedge[i],gself2);
-		//ept = gself2[o2fedge[i]].g_struct_.eps_;
+	for (int i=0;i <fermionic_edge.size();i++){	
+		g.print_edge_info(fermionic_edge[i],gself);
 		std::cout<<"epsilon we generate for AMI is ";
 		print1d(Epsilon[i]);
 		std::cout<<" alpha is " ;
 		print1d(Alpha[i]);
 		std::cout<<" all possible band indexes are: ";
-		for (int j = 0; j < o2fedge_species.size(); j++){
-			std::cout<< o2fedge_species[j][i] <<" ";
+		for (int j = 0; j < fermionic_edge_species.size(); j++){
+			std::cout<< fermionic_edge_species[j][i] <<" ";
 		}
 	std::cout<<std::endl <<"\n";	
 	}
 	std::cout << "energy V are" <<std::endl;
-	for (int i = 0; i <energy_V.size();i++){
-		for (int j = 0; j <energy_V[i].size();j++)
+	for (int i = 0; i <energy_vector.size();i++){
+		for (int j = 0; j <energy_vector[i].size();j++)
 		{
-			std::cout<<energy_V[i][j];
+			std::cout<<energy_vector[i][j];
 		}
 		std::cout<<std::endl;
 	}
@@ -275,11 +245,11 @@ AmiBase::S_t S_array;
 AmiBase::P_t P_array;
 AmiBase::R_t R_array;
 double beta = 50;
-double E_REG=0.0000000; 
+double E_REG=1e-7; 
 int N_INT=ord;
   
 AmiBase::ami_parms test_amiparms(N_INT, E_REG);
-
+//ami.drop_matsubara_poles = false;
 ami.construct(test_amiparms , R0 , R_array , P_array , S_array ); 
 
 AmiBase:: frequency_t frequency;
@@ -287,32 +257,45 @@ for (int i= 0; i<ord;i++){
 frequency.push_back(std::complex<double>(0,0));}
 frequency.push_back(std::complex<double>(0,M_PI/beta));
 std::complex<double> final_result = {0,0};
-for (auto energy: energy_V){
-int i =0;
-//std::cout<<"Using energy_t" <<std::endl;	
-for (auto e : energy){std::cout << e ;}
+//Self energy for all different band indexes are evaluated for first matsubara frequency. This is meant as a test.
+for (int i = 0; i<energy_vector.size();i++){	
 
-AmiBase::ami_vars external (energy,frequency,beta  );
-std::complex < double > calc_result = ami.evaluate(test_amiparms,R_array ,P_array,S_array,external);
-std::cout<<"result is " <<  calc_result*mb.Umatch(xx,yy,o2int_species[i]) <<"\n";
-final_result = final_result+  calc_result*mb.Umatch(xx,yy,o2int_species[i]);
-
-i++;
+AmiBase::ami_vars external (energy_vector[i],frequency,beta  );
+std::complex < double > calc_result = ami.evaluate_otf(test_amiparms,R_array ,P_array,S_array,external);
+std::cout<<"(" << i+1 <<")"<<  calc_result*mb.Umatch(interaction,interaction_value,interaction_species [i]) <<std::endl;
+//std::cout<<"result is " <<  calc_result <<std::endl;
+final_result = final_result+  calc_result*mb.Umatch(interaction,interaction_value,interaction_species [i]);
 }
 std::cout<<"Final Result is result is " << final_result <<"\n";
-std::cout<<"Number of internal fermionic line is:" <<o2fedge.size()<< std::endl;
-std::cout<<"different number of possible species arrangements are: " <<o2fedge_species.size() <<std::endl;
-std::cout<<"total number possible U_abcd interaction printed above: " <<o2int_species.size() <<"\n \n";
+std::cout<<"Number of internal fermionic line is:" <<fermionic_edge.size()<< std::endl;
+std::cout<<"different number of possible species arrangements are: " <<fermionic_edge_species.size() <<std::endl;
+std::cout<<"total number possible U_abcd interaction printed above: " <<interaction_species.size() <<"\n \n";
+print2d(external_line);
+
+frequency.clear();
+std::ofstream outFile("g2_band10_mfreq_beta50.txt");
 
 
+for  (int m = 0; m <fermionic_edge_species.size();m++){
+	for (int n=0; n < 10; n++){	
+		for (int i= 0; i<ord;i++){
+			frequency.push_back(std::complex<double>(0,0));}
+			frequency.push_back(std::complex<double>(0,(2*n+1)*M_PI/beta));
 
-
+			AmiBase::ami_vars external (energy_vector[m],frequency,beta  );
+			std::complex < double > calc_result = ami.evaluate(test_amiparms,R_array ,P_array,S_array,external);//*mb.Umatch(xx,yy,interaction_species[2]) ;
+			//std::cout<<"result is \n" <<  calc_result ;
+			outFile << (2*n+1)*M_PI/beta << " " << calc_result.real() << " "<< calc_result.imag()<<" "<<external_line[m][0]<<" "<< external_line[m][1] <<" ";
+			for (auto i : mb.interaction_index(interaction_species[m])){
+				outFile<< i <<" ";				
+			}
+			outFile << std::endl;
 
 	
 	
-	
-
-		
-	
-	
+frequency.clear();	
+	}
+}	
+outFile.close();
 }
+
