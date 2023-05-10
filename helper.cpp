@@ -55,7 +55,7 @@ double mband::perturb(double number) {
     std::uniform_real_distribution<double> dist(0.01, 0.9);
     std::uniform_int_distribution<int> sign_dist(0, 1);
     int sign = (sign_dist(gen) == 0) ? -1 : 1;
-    return number + (dist(gen) * 1e-4 * sign);
+    return number + (dist(gen) * 1e-5 * sign);
 }
 
 
@@ -100,7 +100,7 @@ std::vector<std::vector<double>>  mband::band_to_hab(std::vector<std::vector<int
         {
             std::cout << band_hab[i][j] << " ";
         }
-        std::cout << "\n";
+        std::cout << "\n\n";
     }
     return band_hab;
 }
@@ -127,7 +127,7 @@ std::vector<std::complex<double>> mband::generate_ept(std::vector<std::vector<in
     
 }
 
-
+/*
 double mband::Umatch(std::vector<std::vector<int>> int_matrix, std::vector<double> int_value, std::vector<std::vector<int>> int_species) {
     double U = 1.00;
     for (int i = 0; i < int_species.size(); i++) {
@@ -139,7 +139,32 @@ double mband::Umatch(std::vector<std::vector<int>> int_matrix, std::vector<doubl
         }
        }
     return U;
+}*/
+
+double mband::Umatch(const std::vector<std::vector<int>>& int_matrix, const std::vector<double>& int_value, 
+                     const std::vector<std::vector<int>>& int_species) {
+    double U = 1.00;
+    std::unordered_map<int, double> int_map;
+    
+    // Create a map to store the interaction matrix values
+    for (int i = 0; i < int_matrix.size(); i++) {
+        int key = int_matrix[i][0] * 1000 + int_matrix[i][1] * 100 + int_matrix[i][2] * 10 + int_matrix[i][3];
+        int_map[key] = int_value[i];
+    }
+    
+    // Iterate over the input vector and lookup the interaction values in the map
+    for (const auto& species : int_species) {
+        int key = species[0] * 1000 + species[1] * 100 + species[2] * 10 + species[3];
+        auto it = int_map.find(key);
+        if (it != int_map.end()) {
+            U *= it->second;
+            continue; // Terminate the inner loop early
+        }
+    }
+    
+    return U;
 }
+
 
 void mband::filter(std::vector<std::vector<int>>& possible_species, const std::vector<int>& list) {
     if (list.empty()) {
@@ -162,7 +187,7 @@ void mband::filter(std::vector<std::vector<int>>& possible_species, const std::v
     }
 
 }
-
+/*
 std::vector<int>  mband::interaction_index(std::vector<std::vector<int>> int_species) {
    std::vector<int> vec;
    std::vector<std::vector<int>> int_matrix = mband::interaction_legs;
@@ -179,6 +204,32 @@ std::vector<int>  mband::interaction_index(std::vector<std::vector<int>> int_spe
     return vec;
    
 }
+*/
+std::vector<int> mband::interaction_index(const std::vector<std::vector<int>>& int_species) {
+    std::vector<int> vec;
+    const std::vector<std::vector<int>>& int_matrix = mband::interaction_legs;
+    std::unordered_map<int, std::vector<int>> int_map;
+    
+    // Create a map to store the interaction matrix
+    for (int i = 0; i < int_matrix.size(); i++) {
+        int key = int_matrix[i][0] * 1000 + int_matrix[i][1] * 100 + int_matrix[i][2] * 10 + int_matrix[i][3];
+        int_map[key].push_back(i);
+    }
+    
+    // Iterate over the input vector and lookup the interaction indices in the map
+    for (const auto& species : int_species) {
+        int key = species[0] * 1000 + species[1] * 100 + species[2] * 10 + species[3];
+        auto it = int_map.find(key);
+        if (it != int_map.end()) {
+            vec.insert(vec.end(), it->second.begin(), it->second.end());
+        }
+    }
+    
+    return vec;
+}
+
+
+
 
 
 
