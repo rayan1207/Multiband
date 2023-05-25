@@ -49,6 +49,17 @@ struct output_collector {
     std::vector<std::vector<int>> Uindex_vec;
 };
 
+struct sampler_collector {
+	AmiGraph::edge_vector_t fermionic_edge;
+	std::vector<std::vector<int>> fermionic_edge_species;
+	std::vector<std::vector<std::vector<int>>> interaction_species ;
+	std::vector<std::vector<int>> external_line;
+	std::vector<AmiBase::epsilon_t> Epsilon;
+	std::vector<AmiBase::alpha_t> Alpha;
+	
+};
+
+
 
 
 
@@ -78,8 +89,13 @@ std::vector<int> interaction_index(const std::vector<std::vector<int>>& int_spec
 //template<typename T>
 //void print2d(const std::vector<std::vector<T>>& vec);
 void solve_multiband(AmiGraph::graph_t &graph,AmiGraph::edge_vector_t &fermionic_edge,std::vector<std::vector<int>> &fermionic_species,std::vector<std::vector<std::vector<int>>> &interaction_species,std::vector<std::vector<int>> &ext_legs);
+void molecular_solver_ext( AmiGraph::graph_t &gself, output_collector& collector,std::vector<double> beta_ext_vec,std::vector<double> mfreq_ext_vec, std::vector<int> line );
 void molecular_solver( AmiGraph::graph_t &gself, output_collector& collector,std::vector<double> beta_ext_vec,std::vector<double> mfreq_ext_vec );
+void sigma_sampler( AmiGraph::graph_t &gself, sampler_collector& collector);
 void write_output(std::string outputfile,output_collector& collector,std::vector<double> beta_ext_vec,std::vector<double> mfreq_ext_vec);
+void calculate_sampled_sigma(AmiGraph::graph_t &gself, sampler_collector& samp_collector,  output_collector& out_collector, std::vector<double> beta_ext_vec,std::vector<double> mfreq_ext_vec );
+
+
 
 std::vector<double> sumVectors(std::vector<std::vector<double>> vectors);
 std::vector<std::complex<double>> convertToComplex(const std::vector<double> vec);

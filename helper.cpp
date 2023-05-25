@@ -127,8 +127,8 @@ std::vector<std::complex<double>> mband::generate_ept(std::vector<std::vector<in
     
 }
 
-/*
-double mband::Umatch(std::vector<std::vector<int>> int_matrix, std::vector<double> int_value, std::vector<std::vector<int>> int_species) {
+
+double mband::Umatch(const std::vector<std::vector<int>>& int_matrix, const std::vector<double>& int_value, const std::vector<std::vector<int>>& int_species) {
     double U = 1.00;
     for (int i = 0; i < int_species.size(); i++) {
         for (int j = 0; j < int_matrix.size(); j++) {
@@ -139,8 +139,8 @@ double mband::Umatch(std::vector<std::vector<int>> int_matrix, std::vector<doubl
         }
        }
     return U;
-}*/
-
+}
+/*
 double mband::Umatch(const std::vector<std::vector<int>>& int_matrix, const std::vector<double>& int_value, 
                      const std::vector<std::vector<int>>& int_species) {
     double U = 1.00;
@@ -164,7 +164,7 @@ double mband::Umatch(const std::vector<std::vector<int>>& int_matrix, const std:
     
     return U;
 }
-
+*/
 
 void mband::filter(std::vector<std::vector<int>>& possible_species, const std::vector<int>& list) {
     if (list.empty()) {
@@ -187,10 +187,10 @@ void mband::filter(std::vector<std::vector<int>>& possible_species, const std::v
     }
 
 }
-/*
-std::vector<int>  mband::interaction_index(std::vector<std::vector<int>> int_species) {
+
+std::vector<int>  mband::interaction_index(const  std::vector<std::vector<int>>& int_species) {
    std::vector<int> vec;
-   std::vector<std::vector<int>> int_matrix = mband::interaction_legs;
+   const std::vector<std::vector<int>> int_matrix = mband::interaction_legs;
     for (int i = 0; i < int_species.size(); i++) {
         for (int j = 0; j < int_matrix.size(); j++) {
             if ((int_species[i][1] == int_matrix[j][1] && int_species[i][2] == int_matrix[j][2] && int_species[i][3]
@@ -204,7 +204,8 @@ std::vector<int>  mband::interaction_index(std::vector<std::vector<int>> int_spe
     return vec;
    
 }
-*/
+
+/*
 std::vector<int> mband::interaction_index(const std::vector<std::vector<int>>& int_species) {
     std::vector<int> vec;
     const std::vector<std::vector<int>>& int_matrix = mband::interaction_legs;
@@ -228,7 +229,7 @@ std::vector<int> mband::interaction_index(const std::vector<std::vector<int>>& i
     return vec;
 }
 
-
+*/
 
 
 

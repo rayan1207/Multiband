@@ -8,19 +8,22 @@ int main(int argc, char** argv)
     AmiBase ami;
 	
     /*
-     std::vector<std::vector<int>> interaction = readFile("data.txt");
-	 std::vector<double> interaction_value = readFile1("data.txt",5);
-	 std::vector<double> band_energy = readFile1("data_h.txt",2);
+     std::vector<std::vector<int>> interaction = readFile("three_orb_U.txt");
+	 std::vector<double> interaction_value = readFile1("three_orb_U.txt",5);
+	 std::vector<double> band_energy = readFile1("three_orb_E.txt",2);
 	 
 	 std::cout<<interaction.size();
-	 std::this_thread::sleep_for(std::chrono::milliseconds(1500));
-	*/
+
+	
+	print1d(band_energy);
+    */
+	
     double e1 = -0.5825365736653964;
 	double e2 = 0.6670627411988165;
 	
 	 double e1_ays  = 0.5*e1 - 0.5*e2;
 	 double e2_ays  = 0.5*e2 -0.5*e1;
-	 
+
 	std::cout <<"energies are" << e1_ays <<" " <<e2_ays;
 	 std::vector<vector<int>> interaction = {{1,1,1,1},{2,2,1,1},{2,1,2,1},{1,2,2,1},{2,1,1,2},{1,2,1,2},{1,1,2,2},{2,2,2,2}};
      std::vector<vector<int>> hubbard = {{2,2,1,1},{1,1,2,2}};
@@ -52,7 +55,8 @@ for(int i=0; i<extern_list.size();i++){
 	AmiGraph::gg_matrix_t ggm; 
 	std::cout<<"Attempting to load self-energy graphs from example_graphs"<<std::endl;
 	int max=4;
-	g.read_ggmp("../example_graphs/ggm_all/",ggm, max);
+	//g.read_ggmp("../example_graphs/ggm_sigma_no_tp/",ggm, max);
+	g.read_ggmp("../example_graphs/ggm_sigma_nofock_notp/",ggm, max);
 	std::cout<<"Completed read"<<std::endl;
 	std::cout<<std::endl;
 	
@@ -61,32 +65,99 @@ for(int i=0; i<extern_list.size();i++){
 	
 	g.ggm_label(ggm,0);
 	
-	
-int  ord = 2;
-int group = 0;
-int vec = 0;
-	AmiGraph::graph_t  gself = ggm[ord][group].graph_vec[vec];
-    //AmiGraph::graph_t  gself = ggm[ord][1].graph_vec[0];
-    
-std::string outputfile = "sto-6_0" + std::to_string(ord) + "_g" + std::to_string(group) + "_v" + std::to_string(vec) + ".text";
-	
-	std::cout<<"Lets check that a graph is labelled"<<std::endl;
-	g.print_all_edge_info(gself);
-    
-	bool hf = true; ///sets to true if you are expecting a hatree or fock type interaction. True works for all type of graph so its set to default. Setting to false 
-	//seeps up the process
+bool hf = true; ///set to true if you are expecting a hatree or fock type interaction. True works for all type of graph so its set to default. Setting to false 
+	//speeds up the process
 	//construction 
-	mband mb(interaction,interaction_value,band_energy,hf);
+mband mb(interaction,interaction_value,band_energy,hf);
+int  min_ord = 2;		
+int  max_ord = 3;
+
+std::vector<double> Beta_ext_vec = {50};
+std::vector<double> Mfreq_ext_vec;
+for (int i =0;i<100;i++){Mfreq_ext_vec.push_back(i);}
+
+
+
+std::vector<mband::sampler_collector> sigma_ToSum;
+std::vector<AmiGraph::graph_t>sigma_FromGraph;
+auto   startTime = std::chrono::high_resolution_clock::now();
+for (int i = min_ord; i < max_ord+1; ++i) {
+    for (int j = 0; j < ggm[i].size(); ++j) {
+        for (int k = 0; k < ggm[i][j].graph_vec.size(); ++k) {
+            mband::sampler_collector sigma_collector;
+            mb.sigma_sampler(ggm[i][j].graph_vec[k], sigma_collector);
+		    sigma_ToSum.push_back(sigma_collector);
+			sigma_FromGraph.push_back(ggm[i][j].graph_vec[k]);
+			if(!sigma_collector.fermionic_edge_species.empty()){
+				mband::output_collector output_collector;
+				mb.calculate_sampled_sigma(ggm[i][j].graph_vec[k], sigma_collector,output_collector,Beta_ext_vec,Mfreq_ext_vec);
+				std::string filename = "2bandH2_o"+std::to_string(i)+"_g" +std::to_string(j)+"_n" +std::to_string(k)+".txt";
+				mb.write_output(filename,output_collector,Beta_ext_vec,Mfreq_ext_vec);
+				
+			}
+			
+        }
+    }
+}
+
+
+
+auto   endTime = std::chrono::high_resolution_clock::now();
+auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count();
+std::cout<<"Final Duration is " << duration;
+/*
+std::vector<double> Beta_ext_vec = {50};
+std::vector<double> Mfreq_ext_vec;
+for (int i =0;i<1;i++){Mfreq_ext_vec.push_back(i);}
+
+for (int i = 0; i < sigma_FromGraph.size();i++){
+	if(!sigma_ToSum[i].fermionic_edge_species.empty()){
+		mband::output_collector output_collector;
+		mb.calculate_sampled_sigma(sigma_FromGraph[i], sigma_ToSum[i],output_collector,Beta_ext_vec,Mfreq_ext_vec);
+	}
+}
+*/	
+/*
+AmiGraph::graph_t  gself0 = ggm[5][0].graph_vec[0];    
+std::string outputfile0 = "sto-10_0" + std::to_string(ord) + "_g" + std::to_string(group) + "_v" + std::to_string(0) + ".txt";
+
+
+AmiGraph::graph_t  gself1 = ggm[2][0].graph_vec[1];    
+std::string outputfile1 = "sto-10_0" + std::to_string(ord) + "_g" + std::to_string(group) + "_v" + std::to_string(1) + ".txt";
+
+AmiGraph::graph_t  gself2 = ggm[2][0].graph_vec[2];    
+std::string outputfile2 = "sto-10_0" + std::to_string(ord) + "_g" + std::to_string(group) + "_v" + std::to_string(2) + ".txt";
 	
-	
+AmiGraph::graph_t  gself3 = ggm[2][0].graph_vec[3];    
+std::string outputfile3 = "sto-10_0" + std::to_string(ord) + "_g" + std::to_string(group) + "_v" + std::to_string(3) + ".txt";
+
+    
+
+mband::sampler_collector Collector0;
+mband::sampler_collector Collector1;
+mband::sampler_collector Collector2;
+mband::sampler_collector Collector3;	
 
 
 
+mband::output_collector collector0;
 mband::output_collector collector1;
-std::vector<double> Beta_ext_vec= {50};
-std::vector<double> Mfreq_ext_vec = {0};
-mb.molecular_solver( gself, collector1, Beta_ext_vec, Mfreq_ext_vec );
-mb.write_output(outputfile, collector1, Beta_ext_vec, Mfreq_ext_vec);
+mband::output_collector collector2;
+mband::output_collector collector3;
+*/
+
+
+//std::vector<int> line = {2,2};
+//mb.sigma_sampler(gself0, Collector0);
+
+//mb.molecular_solver(gself0, collector0, Beta_ext_vec, Mfreq_ext_vec);
+
+
+
+
+//mb.write_output(outputfile0, collector0, Beta_ext_vec, Mfreq_ext_vec);
+
+print1d(band_energy);
 
 
 
