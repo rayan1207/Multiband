@@ -7,7 +7,7 @@
 #include "amigraph.hpp"
 #include <cassert>
 #include <experimental/filesystem>
-
+#include <cmath>
 #include <fstream>
 #include <iostream>
 #include <complex>
@@ -16,7 +16,7 @@
 #include <stdlib.h>
 #include <ctime>
 #include <unistd.h>
-
+#include <mpi.h>
 #include <chrono>
 #include <thread>
 
@@ -61,9 +61,6 @@ struct sampler_collector {
 
 
 
-
-
-
 void assign_label(AmiGraph::graph_t &g1, AmiGraph::edge_vector_t edge,vector<int> vector);
 std::vector<std::vector<int>>  findmatch(std::vector<int> v1,AmiGraph::edge_vector_t &inter_vec);
 std::vector<int> generate_edge_species(AmiGraph::graph_t &g, AmiGraph::edge_vector_t edge);
@@ -94,13 +91,14 @@ void molecular_solver( AmiGraph::graph_t &gself, output_collector& collector,std
 void sigma_sampler( AmiGraph::graph_t &gself, sampler_collector& collector);
 void write_output(std::string outputfile,output_collector& collector,std::vector<double> beta_ext_vec,std::vector<double> mfreq_ext_vec);
 void calculate_sampled_sigma(AmiGraph::graph_t &gself, sampler_collector& samp_collector,  output_collector& out_collector, std::vector<double> beta_ext_vec,std::vector<double> mfreq_ext_vec );
-
+void calculate_sampled_sigma_ext(AmiGraph::graph_t &gself, sampler_collector& samp_collector,  output_collector& out_collector, std::vector<double> beta_ext_vec,std::vector<double> mfreq_ext_vec,std::vector<int> line );
 
 
 std::vector<double> sumVectors(std::vector<std::vector<double>> vectors);
 std::vector<std::complex<double>> convertToComplex(const std::vector<double> vec);
 std::vector<std::vector<double>>  band_to_hab(std::vector<std::vector<int>> band);
 std::vector<std::complex<double>> generate_ept(std::vector<std::vector<int>> epsilon, std::vector<double> band_value);
+std::vector<AmiBase::epsilon_t> updateEpsilon(const std::vector<AmiBase::epsilon_t>& epsilon, const std::vector<double>& energy);
 double perturb(double number);
 
 //double Umatch(std::vector<std::vector<int>> int_matrix, std::vector<double> int_value, std::vector<std::vector<int>> int_species);
@@ -110,9 +108,11 @@ double Umatch(const std::vector<std::vector<int>>& int_matrix, const std::vector
 std::vector<int> Hartee_fock_filter(AmiGraph::edge_vector_t &fermionic_edge);
 void filter(std::vector<std::vector<int>>& possible_species, const std::vector<int>& list);
 
+//////////////////////////////////lattice_stuff///////////////////////////
 
-
-
+double Hubbard_Energy(NewAmiCalc::ext_vars ext,std::vector<double> momenta, int species);
+std::complex<double> lcalc_sampled_sigma(AmiGraph::graph_t &gself, std::vector<AmiBase::epsilon_t>& Epsilon, std::vector<AmiBase::alpha_t>& Alpha, std::vector<int>& Species,
+    NewAmiCalc::ext_vars& ext_params, int MC_num, int lattice_type);
 };
 /// A few simple functions
 template<typename T>

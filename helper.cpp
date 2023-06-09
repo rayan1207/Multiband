@@ -52,10 +52,10 @@ void mband::print_match(std::vector<int> vec,int ord) {
 double mband::perturb(double number) {
     std::random_device rd;
     std::mt19937 gen(rd());
-    std::uniform_real_distribution<double> dist(0.01, 0.9);
+    std::uniform_real_distribution<double> dist(0.1, 0.9);
     std::uniform_int_distribution<int> sign_dist(0, 1);
     int sign = (sign_dist(gen) == 0) ? -1 : 1;
-    return number + (dist(gen) * 1e-5 * sign);
+    return number + (dist(gen) * 1.0e-7 * sign);
 }
 
 
@@ -89,8 +89,8 @@ std::vector<std::vector<double>>  mband::band_to_hab(std::vector<std::vector<int
     std::vector<std::vector<double>> band_hab(band.size(), std::vector<double>(band[0].size()));
     for (int i = 0; i < band.size(); i++) {
         for (int j = 0; j < band[i].size(); j++) {
-            band_hab[i][j] =  -1*mband::perturb(hab[band[i][j] - 1]);
-			//band_hab[i][j] =  -1*hab[band[i][j] - 1];
+            //band_hab[i][j] =  -1*mband::perturb(hab[band[i][j] - 1]);
+			band_hab[i][j] =  -1*hab[band[i][j] - 1];
         }
     }
     std::cout << "Band index replaced by energy:\n";
@@ -113,7 +113,7 @@ std::vector<std::complex<double>> mband::generate_ept(std::vector<std::vector<in
     for (int  i = 0; i < epsilon.size(); i++) {
         
         for (int j = 0; j < epsilon[i].size(); j++) {
-            collect.push_back(epsilon[i][j] * band_value[i]);
+            collect.push_back(-1*epsilon[i][j] * band_value[i]);
         }
         results.push_back(collect);
         collect.clear();;
@@ -140,31 +140,16 @@ double mband::Umatch(const std::vector<std::vector<int>>& int_matrix, const std:
        }
     return U;
 }
-/*
-double mband::Umatch(const std::vector<std::vector<int>>& int_matrix, const std::vector<double>& int_value, 
-                     const std::vector<std::vector<int>>& int_species) {
-    double U = 1.00;
-    std::unordered_map<int, double> int_map;
-    
-    // Create a map to store the interaction matrix values
-    for (int i = 0; i < int_matrix.size(); i++) {
-        int key = int_matrix[i][0] * 1000 + int_matrix[i][1] * 100 + int_matrix[i][2] * 10 + int_matrix[i][3];
-        int_map[key] = int_value[i];
-    }
-    
-    // Iterate over the input vector and lookup the interaction values in the map
-    for (const auto& species : int_species) {
-        int key = species[0] * 1000 + species[1] * 100 + species[2] * 10 + species[3];
-        auto it = int_map.find(key);
-        if (it != int_map.end()) {
-            U *= it->second;
-            continue; // Terminate the inner loop early
-        }
-    }
-    
-    return U;
+
+double mband::Hubbard_Energy(NewAmiCalc::ext_vars ext,std::vector<double> momenta, int species){
+	if (species ==1){
+		return -2*(std::cos(momenta[0]) + std::cos(momenta[1])) -ext.MU_.real()-0.5*ext.H_;	
+	}
+	if (species ==2){
+		return -2*(std::cos(momenta[0]) + std::cos(momenta[1])) -ext.MU_.real()+0.5*ext.H_;
+	}
+
 }
-*/
 
 void mband::filter(std::vector<std::vector<int>>& possible_species, const std::vector<int>& list) {
     if (list.empty()) {
@@ -205,31 +190,29 @@ std::vector<int>  mband::interaction_index(const  std::vector<std::vector<int>>&
    
 }
 
-/*
-std::vector<int> mband::interaction_index(const std::vector<std::vector<int>>& int_species) {
-    std::vector<int> vec;
-    const std::vector<std::vector<int>>& int_matrix = mband::interaction_legs;
-    std::unordered_map<int, std::vector<int>> int_map;
-    
-    // Create a map to store the interaction matrix
-    for (int i = 0; i < int_matrix.size(); i++) {
-        int key = int_matrix[i][0] * 1000 + int_matrix[i][1] * 100 + int_matrix[i][2] * 10 + int_matrix[i][3];
-        int_map[key].push_back(i);
-    }
-    
-    // Iterate over the input vector and lookup the interaction indices in the map
-    for (const auto& species : int_species) {
-        int key = species[0] * 1000 + species[1] * 100 + species[2] * 10 + species[3];
-        auto it = int_map.find(key);
-        if (it != int_map.end()) {
-            vec.insert(vec.end(), it->second.begin(), it->second.end());
+std::vector<AmiBase::epsilon_t> mband::updateEpsilon(const std::vector<AmiBase::epsilon_t>& epsilon, const std::vector<double>& energy) {
+    std::vector<std::vector<int>> updatedEpsilon = epsilon;
+    std::vector<double> uniqueEnergies;
+    for (double e : energy) {
+        if (std::find(uniqueEnergies.begin(), uniqueEnergies.end(), e) == uniqueEnergies.end()) {
+            uniqueEnergies.push_back(e);
         }
     }
-    
-    return vec;
+
+    for (int i = 0; i < energy.size(); i++) {
+        double currentEnergy = energy[i];
+        std::vector<int> currentEpsilonRow = updatedEpsilon[i];
+
+        for (int j = i + 1; j < energy.size(); j++) {
+            if (currentEnergy == energy[j]) {
+                updatedEpsilon[j] = currentEpsilonRow;
+            }
+        }
+    }
+
+    return updatedEpsilon;
 }
 
-*/
 
 
 

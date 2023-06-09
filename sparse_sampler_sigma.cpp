@@ -153,7 +153,7 @@ std::vector<int> mband::external_species(AmiGraph::graph_t &graph){
 	AmiGraph::vertex_vector_t v;
 	AmiGraph::edge_vector_t edges;
 	g.find_external_vertices(graph,v,edges);
-	std::cout<<"{" << graph[edges[0]].g_struct_.species_ <<"," << graph[edges[1]].g_struct_.species_<<"}";
+	//std::cout<<"{" << graph[edges[0]].g_struct_.species_ <<"," << graph[edges[1]].g_struct_.species_<<"}";
 	return {graph[edges[0]].g_struct_.species_,graph[edges[1]].g_struct_.species_};
 }
 
@@ -225,7 +225,7 @@ void mband::solve_multiband_4(AmiGraph::graph_t &graph,AmiGraph::edge_vector_t &
 				fermionic_species.push_back(v);
 				v.clear();
 								//std::cout<<")"<<std::endl;
-								}
+								}mband::assign_label(graph,int_vector[3],initial_species_4);
 								
 							}
 							else { mband::assign_label(graph,int_vector[3],initial_species_4);}				
@@ -242,7 +242,7 @@ void mband::solve_multiband_4(AmiGraph::graph_t &graph,AmiGraph::edge_vector_t &
 		}
 	}
 	else{std::cout<< "NO match found \n";}
-//mband::print_assigned_species(interaction_species);
+mband::print_assigned_species(interaction_species);
 }
 	
 
@@ -316,7 +316,7 @@ void mband::solve_multiband_3(AmiGraph::graph_t &graph,AmiGraph::edge_vector_t &
 			}
     }
 	else {std::cout << " No match found \n";}
-//mband::print_assigned_species(interaction_species);  
+mband::print_assigned_species(interaction_species);  
 }
 
 
@@ -364,14 +364,14 @@ void mband::solve_multiband_2(AmiGraph::graph_t &graph,AmiGraph::edge_vector_t &
 				
 				std::cout<< fermionic_edge.size();
 				std::vector<int> v;
-				std::cout<<"(";
+				//std::cout<<"(";
 				for (int x =0; x < fermionic_edge.size(); x++){
 					v.push_back(graph[fermionic_edge[x]].g_struct_.species_);
-					std::cout<<graph[fermionic_edge[x]].g_struct_.species_;				
+					//std::cout<<graph[fermionic_edge[x]].g_struct_.species_;				
 				}
 				fermionic_species.push_back(v);
 				v.clear();
-				std::cout<<")"<<std::endl;			    
+				//std::cout<<")"<<std::endl;			    
 				}
 				mband::assign_label(graph,int_vector[1],initial_species_2);
 				

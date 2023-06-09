@@ -19,22 +19,14 @@ void mband::molecular_solver( AmiGraph::graph_t &gself, mband::output_collector&
 	std::vector<std::vector<int>> external_line;
 	std::vector<AmiBase::epsilon_t> Epsilon;
 	std::vector<AmiBase::alpha_t> Alpha;
-	
-	
-	auto   startTime = std::chrono::high_resolution_clock::now();
 	mband::solve_multiband(gself,fermionic_edge,fermionic_edge_species,interaction_species ,external_line);
 	mband::generate_eps_alpha(gself,fermionic_edge,Epsilon,Alpha);
-	auto   endTime = std::chrono::high_resolution_clock::now();
-	auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count();
+	
+	//double  loop_ord =std::pow( -1, (double) (g.count_fermi_loops(gself) + ord));
 	
 	double prefactor =  g.get_prefactor(gself,ord)*std::pow( 2, (double) g.count_fermi_loops(gself));
 	
 	std::vector<std::vector<double>> speciesToEnergy = mband::band_to_hab(fermionic_edge_species);
-	std::vector<std::vector<std::complex<double> >> energy_vector;
-	for (auto vec: speciesToEnergy){
-		energy_vector.push_back(mband::generate_ept(Epsilon, vec));
-	}
-	
 	
 	for (int i=0;i <fermionic_edge.size();i++){	
 		g.print_edge_info(fermionic_edge[i],gself);
@@ -50,73 +42,64 @@ void mband::molecular_solver( AmiGraph::graph_t &gself, mband::output_collector&
 	}
 
 	int n = 2*ord-1; //number of fermionic lines
-	AmiBase::g_struct gs[n];
-	std::vector<AmiBase::g_struct> gs_vec;
-	for(int i = 0; i < n; i++) {
-		 
-		gs[i] = {Epsilon[i], Alpha[i]};
-		gs_vec.push_back(gs[i]);
-	}
-	AmiBase::g_prod_t R0 =gs_vec;
-	AmiBase::S_t S_array;
-	AmiBase::P_t P_array;
-	AmiBase::R_t R_array;
-
 	double E_REG=0; 
-	int N_INT=ord;
-	  
+	int N_INT=ord;  
 	AmiBase::ami_parms test_amiparms(N_INT, E_REG);
-	ami.construct(test_amiparms , R0 , R_array , P_array , S_array ); 
 	AmiBase::frequency_t frequency;
-	
-	
 	std::complex<double> final_result = {0,0};
-
-	int count = 1;
 	
+	int count = 1;
+
 	for (int y = 0;y < beta_ext_vec.size();y++){ 
 		for (int x = 0; x <mfreq_ext_vec.size();x++) {
 			for (int i= 0; i<ord;i++){  frequency.push_back(std::complex<double>(0,0));}
 			frequency.push_back(std::complex<double>(0,(2*mfreq_ext_vec [x]+ 1)*M_PI/beta_ext_vec[y]));
-				for (int i = 0; i<energy_vector.size();i++){
+				for (int i = 0; i<speciesToEnergy.size();i++){					
+					std::vector<std::complex<double>> energy_t = mband::generate_ept(Epsilon, speciesToEnergy[i]);
+					AmiBase::ami_vars external (energy_t,frequency,beta_ext_vec[y]);
+					AmiBase::g_struct gs[n];
+						
+					std::vector<AmiBase::g_struct> gs_vec;
+					std::vector<AmiBase::epsilon_t> updated_Epsilon = mband::updateEpsilon(Epsilon,speciesToEnergy[i]);
+	
+					for(int i = 0; i < n; i++) {
+		 
+						gs[i] = {updated_Epsilon[i], Alpha[i]};
+						gs_vec.push_back(gs[i]);
+						}
+					AmiBase::S_t S_array;
+					AmiBase::P_t P_array;
+					AmiBase::R_t R_array;
+					AmiBase::g_prod_t R0 =gs_vec;
+					ami.precision_cutoff=0;
+					ami.drop_bosonic_diverge =true;
+					ami.drop_matsubara_poles = false;
+					ami.construct(test_amiparms , R0 , R_array , P_array , S_array ); 
 					
-					
-					AmiBase::ami_vars external (energy_vector[i],frequency,beta_ext_vec[y]);
-					std::complex < double > calc_result = prefactor*ami.evaluate(test_amiparms,R_array ,P_array,S_array,external)*mband::Umatch(mband::interaction_legs,mband::int_values,interaction_species[i]);					
+					std::complex < double > calc_result = prefactor*ami.evaluate_otf(test_amiparms,R_array ,P_array,S_array,external)*mband::Umatch(mband::interaction_legs,mband::int_values,interaction_species[i]);					
+			
+					std::cout<< "result is " <<  calc_result <<std::endl;
 					collector.result_vec.push_back(calc_result);
 					collector.beta_vec.push_back(beta_ext_vec[y] );
 					collector.mfreq_vec.push_back((2*mfreq_ext_vec[x]+1)*M_PI/beta_ext_vec[y]);
 					collector.Uindex_vec.push_back(mband::interaction_index(interaction_species[i]));
 					collector.extline_vec.push_back(external_line[i]);			
-					std::cout<<count <<". " << calc_result <<std::endl;
-					std::cout<<"result is " <<  calc_result <<std::endl;
+
 					final_result = final_result+  calc_result;
 					count++;
+						
 					}
 					frequency.clear();
 				}
 			}
 
 	std::cout <<"Pre-factor used is " << prefactor <<std::endl;
+	
 	std::cout<<"Final Result with default U_matrix provided is " << final_result <<"\n";
 	std::cout<<"Number of internal fermionic line is:" <<fermionic_edge.size()<< std::endl;
 	std::cout<<"different number of possible species arrangements are: " <<fermionic_edge_species.size() <<std::endl;
 	std::cout<<"total number possible U_abcd interaction printed above: " <<interaction_species.size() <<"\n \n";
-
-
-	//print2d(external_line);
-	/*
-	std::cout<<" Mfreq result is \n\n";
-	print1d(collector.mfreq_vec);
-	std::cout<<" beta result is \n\n";
-	print1d(collector.beta_vec);
-	std::cout<<"resut is \n\n";
-	print1d(collector.result_vec);
-	std::cout<<"Uindex is \n";
-	print2d(collector.Uindex_vec);
-	std::cout<<"external line species is \n";
-	print2d(collector.extline_vec);	*/
-	std::cout << "Execution time: " << duration << " milliseconds" << std::endl;
+	
 }
 
 void mband::write_output(std::string outputfile,mband::output_collector& collector,std::vector<double> beta_ext_vec,std::vector<double> mfreq_ext_vec){ 
@@ -146,15 +129,11 @@ void mband::molecular_solver_ext( AmiGraph::graph_t &gself, mband::output_collec
 	mband::solve_multiband(gself,fermionic_edge,fermionic_edge_species,interaction_species ,external_line);
 	mband::generate_eps_alpha(gself,fermionic_edge,Epsilon,Alpha);
 	
+	//double  loop_ord =std::pow( -1, (double) (g.count_fermi_loops(gself) + ord));
+	
 	double prefactor =  g.get_prefactor(gself,ord)*std::pow( 2, (double) g.count_fermi_loops(gself));
 	
 	std::vector<std::vector<double>> speciesToEnergy = mband::band_to_hab(fermionic_edge_species);
-	std::vector<std::vector<std::complex<double> >> energy_vector;
-	for (auto vec: speciesToEnergy){
-		energy_vector.push_back(mband::generate_ept(Epsilon, vec));
-
-	}
-	
 	
 	for (int i=0;i <fermionic_edge.size();i++){	
 		g.print_edge_info(fermionic_edge[i],gself);
@@ -170,45 +149,59 @@ void mband::molecular_solver_ext( AmiGraph::graph_t &gself, mband::output_collec
 	}
 
 	int n = 2*ord-1; //number of fermionic lines
-	AmiBase::g_struct gs[n];
-	std::vector<AmiBase::g_struct> gs_vec;
-	for(int i = 0; i < n; i++) {
-		 
-		gs[i] = {Epsilon[i], Alpha[i]};
-		gs_vec.push_back(gs[i]);
-	}
-	AmiBase::g_prod_t R0 =gs_vec;
-	AmiBase::S_t S_array;
-	AmiBase::P_t P_array;
-	AmiBase::R_t R_array;
-
 	double E_REG=0; 
-	int N_INT=ord;
-	  
+	int N_INT=ord;  
 	AmiBase::ami_parms test_amiparms(N_INT, E_REG);
-	ami.construct(test_amiparms , R0 , R_array , P_array , S_array ); 
 	AmiBase::frequency_t frequency;
-	
-	
 	std::complex<double> final_result = {0,0};
-
+	
 	int count = 1;
 
 	for (int y = 0;y < beta_ext_vec.size();y++){ 
 		for (int x = 0; x <mfreq_ext_vec.size();x++) {
 			for (int i= 0; i<ord;i++){  frequency.push_back(std::complex<double>(0,0));}
 			frequency.push_back(std::complex<double>(0,(2*mfreq_ext_vec [x]+ 1)*M_PI/beta_ext_vec[y]));
-				for (int i = 0; i<energy_vector.size();i++){					
-					if (external_line[i][0] ==line[0]& external_line[i][1] == line[1]){
-					AmiBase::ami_vars external (energy_vector[i],frequency,beta_ext_vec[y]);
-					std::complex < double > calc_result = prefactor*ami.evaluate(test_amiparms,R_array ,P_array,S_array,external)*mband::Umatch(mband::interaction_legs,mband::int_values,interaction_species[i]);					
+				for (int i = 0; i<speciesToEnergy.size();i++){					
+					if (external_line[i][0] ==line[0]& external_line[i][1] == line[1])
+					{	
+					std::vector<std::complex<double>> energy_t = mband::generate_ept(Epsilon, speciesToEnergy[i]);
+					AmiBase::ami_vars external (energy_t,frequency,beta_ext_vec[y]);
+					AmiBase::g_struct gs[n];
+						
+					std::vector<AmiBase::g_struct> gs_vec;
+					std::vector<AmiBase::epsilon_t> updated_Epsilon = mband::updateEpsilon(Epsilon,speciesToEnergy[i]);
+	
+					for(int i = 0; i < n; i++) {
+		 
+						gs[i] = {updated_Epsilon[i], Alpha[i]};
+						gs_vec.push_back(gs[i]);
+						}
+					AmiBase::S_t S_array;
+					AmiBase::P_t P_array;
+					AmiBase::R_t R_array;
+					AmiBase::g_prod_t R0 =gs_vec;
+					ami.precision_cutoff=0;
+					ami.drop_bosonic_diverge =true;
+					ami.drop_matsubara_poles = false;
+					ami.construct(test_amiparms , R0 , R_array , P_array , S_array ); 
+					
+					std::complex < double > calc_result = prefactor*ami.evaluate_otf(test_amiparms,R_array ,P_array,S_array,external)*mband::Umatch(mband::interaction_legs,mband::int_values,interaction_species[i]);					
+					 /*
+					 if (std::isinf(calc_result.real()) || std::isnan(calc_result.real()) ||
+						std::isinf(calc_result.imag()) || std::isnan(calc_result.imag())) {
+						calc_result = std::complex<double>(0.0, 0.0);  // Set to zero
+								}
+
+					*/
+					std::cout<< "result is " <<  calc_result <<std::endl;
 					collector.result_vec.push_back(calc_result);
 					collector.beta_vec.push_back(beta_ext_vec[y] );
 					collector.mfreq_vec.push_back((2*mfreq_ext_vec[x]+1)*M_PI/beta_ext_vec[y]);
-					collector.Uindex_vec.push_back(mband::interaction_index(interaction_species[i]));
+					//collector.Uindex_vec.push_back(mband::interaction_index(interaction_species[i]));
+					std::vector<int> pp = {0,0};
+					collector.Uindex_vec.push_back(pp);
 					collector.extline_vec.push_back(external_line[i]);			
-					//std::cout<<count <<". " << calc_result <<std::endl;
-					//std::cout<<"result is " <<  calc_result <<std::endl;
+
 					final_result = final_result+  calc_result;
 					count++;
 						}
@@ -218,12 +211,12 @@ void mband::molecular_solver_ext( AmiGraph::graph_t &gself, mband::output_collec
 			}
 
 	std::cout <<"Pre-factor used is " << prefactor <<std::endl;
-	/*
+	
 	std::cout<<"Final Result with default U_matrix provided is " << final_result <<"\n";
 	std::cout<<"Number of internal fermionic line is:" <<fermionic_edge.size()<< std::endl;
 	std::cout<<"different number of possible species arrangements are: " <<fermionic_edge_species.size() <<std::endl;
 	std::cout<<"total number possible U_abcd interaction printed above: " <<interaction_species.size() <<"\n \n";
-*/
+
 
 }
 
@@ -241,7 +234,7 @@ void mband::sigma_sampler( AmiGraph::graph_t &gself, mband::sampler_collector& c
 	
 	double prefactor =  g.get_prefactor(gself,ord)*std::pow( 2, (double) g.count_fermi_loops(gself));
 	
-	
+	/*
 	for (int i=0;i <collector.fermionic_edge.size();i++){	
 		g.print_edge_info(collector.fermionic_edge[i],gself);
 		std::cout<<"epsilon we generate for AMI is ";
@@ -254,8 +247,9 @@ void mband::sigma_sampler( AmiGraph::graph_t &gself, mband::sampler_collector& c
 		}
 	std::cout<<std::endl <<"\n";	
 	}
-	
-
+	*/
+   std::cout << " Number fermionic edge species" << collector.fermionic_edge_species.size();
+   std::cout <<"Pre-factor used is " << prefactor <<std::endl;
    std::cout << "Execution time: " << duration << " milliseconds" << std::endl;
 }
 
@@ -326,6 +320,166 @@ void mband::calculate_sampled_sigma(AmiGraph::graph_t &gself, mband::sampler_col
 	
 
 }	
+
+
+void mband::calculate_sampled_sigma_ext(AmiGraph::graph_t &gself, mband::sampler_collector& samp_collector,  mband::output_collector& out_collector, std::vector<double> beta_ext_vec,std::vector<double> mfreq_ext_vec,std::vector<int> line ){
+   AmiGraph g(AmiBase::Sigma, 0);
+   AmiBase ami;
+   int ord = g.graph_order(gself);
+   double prefactor =  g.get_prefactor(gself,ord)*std::pow( 2, (double) g.count_fermi_loops(gself));
+   
+   
+   std::vector<std::vector<double>> speciesToEnergy = mband::band_to_hab(samp_collector.fermionic_edge_species);
+   std::vector<std::vector<std::complex<double> >> energy_vector;
+	for (auto vec: speciesToEnergy){
+		energy_vector.push_back(mband::generate_ept(samp_collector.Epsilon, vec));
+	}
+	
+	
+	int n = 2*ord-1; //number of fermionic lines
+	AmiBase::g_struct gs[n];
+	std::vector<AmiBase::g_struct> gs_vec;
+	for(int i = 0; i < n; i++) {
+		 
+		gs[i] = {samp_collector.Epsilon[i], samp_collector.Alpha[i]};
+		gs_vec.push_back(gs[i]);
+	}
+	AmiBase::g_prod_t R0 =gs_vec;
+	AmiBase::S_t S_array;
+	AmiBase::P_t P_array;
+	AmiBase::R_t R_array;
+
+	double E_REG=1e-8; 
+	int N_INT=ord;
+	  
+	AmiBase::ami_parms test_amiparms(N_INT, E_REG);
+	ami.construct(test_amiparms , R0 , R_array , P_array , S_array ); 
+	AmiBase::frequency_t frequency;
+	ami.precision_cutoff =1e-8;
+	
+	std::complex<double> final_result = {0,0};
+
+
+	
+	for (int y = 0;y < beta_ext_vec.size();y++){ 
+		for (int x = 0; x <mfreq_ext_vec.size();x++) {
+			for (int i= 0; i<ord;i++){  frequency.push_back(std::complex<double>(0,0));}
+			frequency.push_back(std::complex<double>(0,(2*mfreq_ext_vec [x]+ 1)*M_PI/beta_ext_vec[y]));
+				for (int i = 0; i<energy_vector.size();i++){
+					if (samp_collector.external_line[i][0] ==line[0] & samp_collector.external_line[i][1] == line[1]){
+						AmiBase::ami_vars external (energy_vector[i],frequency,beta_ext_vec[y]);	
+						std::complex < double > calc_result = prefactor*ami.evaluate(test_amiparms,R_array ,P_array,S_array,external)*mband::Umatch(mband::interaction_legs,
+						mband::int_values,samp_collector.interaction_species[i]);					
+						out_collector.result_vec.push_back(calc_result);
+						out_collector.beta_vec.push_back(beta_ext_vec[y] );
+						out_collector.mfreq_vec.push_back((2*mfreq_ext_vec[x]+1)*M_PI/beta_ext_vec[y]);
+						std::vector<int> pp ={0,0};
+						//out_collector.Uindex_vec.push_back(mband::interaction_index(samp_collector.interaction_species[i]));
+						out_collector.Uindex_vec.push_back(pp);
+						out_collector.extline_vec.push_back(samp_collector.external_line[i]);			
+						std::cout<<"result is " <<  calc_result <<std::endl;
+					final_result = final_result+  calc_result;}
+					
+					}
+					frequency.clear();
+				}
+			}
+
+	std::cout <<"Pre-factor used is " << prefactor <<std::endl;
+	std::cout<<"Final Result with default U_matrix provided is " << final_result <<"\n";
+	std::cout<<"Number of internal fermionic line is:" <<samp_collector.fermionic_edge.size()<< std::endl;
+	std::cout<<"different number of possible species arrangements are: " <<samp_collector.fermionic_edge_species.size() <<std::endl;
+	std::cout<<"total number possible U_abcd interaction printed above: " <<samp_collector.interaction_species.size() <<"\n \n";
+}
+
+
+
+std::complex<double> mband::lcalc_sampled_sigma(AmiGraph::graph_t &gself, std::vector<AmiBase::epsilon_t>& Epsilon, std::vector<AmiBase::alpha_t>& Alpha, std::vector<int>& Species,
+    NewAmiCalc::ext_vars& ext_params, int MC_num, int lattice_type) {
+    AmiGraph g(AmiBase::Sigma, 0);
+    AmiBase ami;
+    int ord = g.graph_order(gself);
+    double prefactor = g.get_prefactor(gself,ord);
+    int n = 2 * ord - 1; // number of fermionic lines
+    AmiBase::g_struct gs[n];
+    std::vector<AmiBase::g_struct> gs_vec;
+    for (int i = 0; i < n; i++) {
+        gs[i] = {Epsilon[i], Alpha[i]};
+		print1d(Epsilon[i]);
+        gs_vec.push_back(gs[i]);
+    }
+
+    AmiBase::g_prod_t R0 = gs_vec;
+    AmiBase::S_t S_array;
+    AmiBase::P_t P_array;
+    AmiBase::R_t R_array;
+
+    double E_REG = 0;
+    int N_INT = ord;
+
+    AmiBase::ami_parms test_amiparms(N_INT, E_REG);
+    ami.construct(test_amiparms, R0, R_array, P_array, S_array);
+    AmiBase::frequency_t frequency;
+    for (int i = 0; i < ord; i++) {
+        frequency.push_back(std::complex<double>(0, 0));
+    }
+    frequency.push_back(ext_params.external_freq_[0]);
+     std::cout <<"Real is " <<ext_params.external_freq_[0].real()<<"Imag is " <<ext_params.external_freq_[0].imag() ;
+	
+    std::random_device rd;
+    std::default_random_engine engine(rd());
+    std::uniform_real_distribution<double> distribution(0.0, 1.0);
+
+    int kspace = Alpha[0].size() - 1;
+    std::complex<double> localSum(0.0, 0.0);
+    // Generate random samples and calculate the sum
+    for (int i = 0; i < MC_num; i++) {
+        std::vector<std::vector<double>> momenta;
+        momenta.reserve(kspace);
+        for (int j = 0;  j< kspace; j++) {
+            double momentum1 = 2 * M_PI * distribution(engine);
+            double momentum2 = 2 * M_PI * distribution(engine);
+            momenta.push_back({momentum1, momentum2});
+        }
+        momenta.push_back(ext_params.external_k_list_[0]);
+		//std::cout<<"un-summed momenta is\n";
+        //print2d(momenta);
+		
+        std::vector<std::vector<double>> summed_momenta;
+        summed_momenta.reserve(Alpha.size());
+        for (const auto& alpha : Alpha) {
+            double qx = 0;
+            double qy = 0;
+            for (int j = 0; j < alpha.size(); j++) {
+                qx += static_cast<double>(alpha[j]) * momenta[j][0];
+                qy += static_cast<double>(alpha[j]) * momenta[j][1];
+            }
+            summed_momenta.push_back({qx, qy});
+        }
+		//std::cout<< " after summation is \n"; 
+		//print2d(summed_momenta);
+
+        std::vector<double> energy;
+        energy.reserve(summed_momenta.size());
+        for (int i = 0; i < summed_momenta.size(); i++) {
+            if (lattice_type == 1) {  
+                energy.push_back(mband::Hubbard_Energy(ext_params, summed_momenta[i], Species[i]));
+            }
+        }
+		//std::cout<<"energy is " << "\n";
+		//print1d(energy);
+		//print2d(frequency);
+
+        std::vector<std::complex<double>> energy_t = mband::generate_ept(Epsilon, energy);
+		//energy.clear();
+        AmiBase::ami_vars external(energy_t, frequency, ext_params.BETA_);
+        localSum += prefactor* ami.evaluate(test_amiparms, R_array, P_array, S_array, external);
+    }
+
+	//return localSum / static_cast<double>(MC_num);
+	return localSum;
+}
+
 	
 
      
