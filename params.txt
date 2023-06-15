@@ -1,0 +1,16 @@
+min_ord=2		
+max_ord=2
+molecular=0
+E_reg=0
+lattice_type=1
+molecular_type=0
+set_precision=0
+hatree_fock=false
+tperp_p=0
+tperp=0
+tp=0
+in=1
+out=1
+MC_num=100000
+
+
