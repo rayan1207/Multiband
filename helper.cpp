@@ -52,10 +52,10 @@ void mband::print_match(std::vector<int> vec,int ord) {
 double mband::perturb(double number) {
     std::random_device rd;
     std::mt19937 gen(rd());
-    std::uniform_real_distribution<double> dist(0.01, 0.9);
+    std::uniform_real_distribution<double> dist(0.1, 0.9);
     std::uniform_int_distribution<int> sign_dist(0, 1);
     int sign = (sign_dist(gen) == 0) ? -1 : 1;
-    return number + (dist(gen) * 1e-5 * sign);
+    return number + (dist(gen) * 1.0e-7 * sign);
 }
 
 
@@ -89,8 +89,8 @@ std::vector<std::vector<double>>  mband::band_to_hab(std::vector<std::vector<int
     std::vector<std::vector<double>> band_hab(band.size(), std::vector<double>(band[0].size()));
     for (int i = 0; i < band.size(); i++) {
         for (int j = 0; j < band[i].size(); j++) {
-            band_hab[i][j] =  -1*mband::perturb(hab[band[i][j] - 1]);
-			//band_hab[i][j] =  -1*hab[band[i][j] - 1];
+            //band_hab[i][j] =  -1*mband::perturb(hab[band[i][j] - 1]);
+			band_hab[i][j] =  hab[band[i][j] - 1];
         }
     }
     std::cout << "Band index replaced by energy:\n";
@@ -113,7 +113,7 @@ std::vector<std::complex<double>> mband::generate_ept(std::vector<std::vector<in
     for (int  i = 0; i < epsilon.size(); i++) {
         
         for (int j = 0; j < epsilon[i].size(); j++) {
-            collect.push_back(epsilon[i][j] * band_value[i]);
+            collect.push_back(-1*epsilon[i][j] * band_value[i]);
         }
         results.push_back(collect);
         collect.clear();;
@@ -140,31 +140,62 @@ double mband::Umatch(const std::vector<std::vector<int>>& int_matrix, const std:
        }
     return U;
 }
-/*
-double mband::Umatch(const std::vector<std::vector<int>>& int_matrix, const std::vector<double>& int_value, 
-                     const std::vector<std::vector<int>>& int_species) {
-    double U = 1.00;
-    std::unordered_map<int, double> int_map;
-    
-    // Create a map to store the interaction matrix values
-    for (int i = 0; i < int_matrix.size(); i++) {
-        int key = int_matrix[i][0] * 1000 + int_matrix[i][1] * 100 + int_matrix[i][2] * 10 + int_matrix[i][3];
-        int_map[key] = int_value[i];
-    }
-    
-    // Iterate over the input vector and lookup the interaction values in the map
-    for (const auto& species : int_species) {
-        int key = species[0] * 1000 + species[1] * 100 + species[2] * 10 + species[3];
-        auto it = int_map.find(key);
-        if (it != int_map.end()) {
-            U *= it->second;
-            continue; // Terminate the inner loop early
+
+double mband::Hubbard_Energy(NewAmiCalc::ext_vars ext,std::vector<double> momenta, int species,mband::params_param param){
+	if (species ==1){
+		return -2*(std::cos(momenta[0]) + std::cos(momenta[1])) -ext.MU_.real()-0.5*ext.H_-4*param.tp*(std::cos(momenta[0])*std::cos(momenta[1]));	
+	}
+	if (species ==2){
+		return -2*(std::cos(momenta[0]) + std::cos(momenta[1])) -ext.MU_.real()+0.5*ext.H_-4*param.tp*(std::cos(momenta[0])*std::cos(momenta[1]));
+	}
+	else{
+		std::cerr<<" Species numer should be 1 or 2 for hubbard problem"<< std::endl;
+		return 0.0;
+	}
+
+}
+
+double mband::Bilayer_Hubbard_Energy(NewAmiCalc::ext_vars ext,std::vector<double> momenta, int species,mband::params_param param){
+	if (species ==1){
+		return -2*(1+param.tperp_p)*(std::cos(momenta[0]) + std::cos(momenta[1]))-param.tperp -ext.MU_.real()-0.5*ext.H_-4*param.tp*(std::cos(momenta[0])*std::cos(momenta[1]));	
+	}
+	if (species ==2){
+		return -2*(1+param.tperp_p)*(std::cos(momenta[0]) + std::cos(momenta[1]))-param.tperp -ext.MU_.real()+0.5*ext.H_-4*param.tp*(std::cos(momenta[0])*std::cos(momenta[1]));
+	}
+	if (species ==3){
+		return -2*(1-param.tperp_p)*(std::cos(momenta[0]) + std::cos(momenta[1]))+param.tperp -ext.MU_.real()-0.5*ext.H_-4*param.tp*(std::cos(momenta[0])*std::cos(momenta[1]));	
+	}
+	if (species ==4){
+		return -2*(1-param.tperp_p)*(std::cos(momenta[0]) + std::cos(momenta[1]))+param.tperp -ext.MU_.real()+0.5*ext.H_-4*param.tp*(std::cos(momenta[0])*std::cos(momenta[1]));
+	}
+	else{
+		std::cerr<<" Species numer should be 1,2,3 and 4 for bi-layer hubbard problem"<< std::endl;
+		return 0.0;
+	}
+
+}
+
+double mband::non_local_U_formfactor(std::vector<double> vq) {
+    return 2 * std::cos(vq[0]) + 2 * std::cos(vq[1]);
+}
+
+std::vector<std::vector<int>> mband::find_non_local_bosonic_alpha(std::vector<std::vector<int>> bosonic_Alpha, std::vector<int> Uindex) {
+    std::vector<std::vector<int>> filtered_alpha;
+    for (int i = 0; i < bosonic_Alpha.size(); i++) {
+        if (Uindex[i] > 3) {
+            filtered_alpha.push_back(bosonic_Alpha[i]);
+
         }
     }
-    
-    return U;
+    return filtered_alpha;
 }
-*/
+
+
+double mband::Stdev(double total_sq, double mean, int n) {
+    double sample_var = (total_sq - (mean * mean * n)) / (n - 1.0);
+    return std::sqrt(sample_var/n);
+}
+
 
 void mband::filter(std::vector<std::vector<int>>& possible_species, const std::vector<int>& list) {
     if (list.empty()) {
@@ -205,32 +236,110 @@ std::vector<int>  mband::interaction_index(const  std::vector<std::vector<int>>&
    
 }
 
-/*
-std::vector<int> mband::interaction_index(const std::vector<std::vector<int>>& int_species) {
-    std::vector<int> vec;
-    const std::vector<std::vector<int>>& int_matrix = mband::interaction_legs;
-    std::unordered_map<int, std::vector<int>> int_map;
-    
-    // Create a map to store the interaction matrix
-    for (int i = 0; i < int_matrix.size(); i++) {
-        int key = int_matrix[i][0] * 1000 + int_matrix[i][1] * 100 + int_matrix[i][2] * 10 + int_matrix[i][3];
-        int_map[key].push_back(i);
-    }
-    
-    // Iterate over the input vector and lookup the interaction indices in the map
-    for (const auto& species : int_species) {
-        int key = species[0] * 1000 + species[1] * 100 + species[2] * 10 + species[3];
-        auto it = int_map.find(key);
-        if (it != int_map.end()) {
-            vec.insert(vec.end(), it->second.begin(), it->second.end());
+std::vector<AmiBase::epsilon_t> mband::updateEpsilon(const std::vector<AmiBase::epsilon_t>& epsilon, const std::vector<double>& energy) {
+    std::vector<std::vector<int>> updatedEpsilon = epsilon;
+    std::vector<double> uniqueEnergies;
+    for (double e : energy) {
+        if (std::find(uniqueEnergies.begin(), uniqueEnergies.end(), e) == uniqueEnergies.end()) {
+            uniqueEnergies.push_back(e);
         }
     }
-    
-    return vec;
+
+    for (int i = 0; i < energy.size(); i++) {
+        double currentEnergy = energy[i];
+        std::vector<int> currentEpsilonRow = updatedEpsilon[i];
+
+        for (int j = i + 1; j < energy.size(); j++) {
+            if (currentEnergy == energy[j]) {
+                updatedEpsilon[j] = currentEpsilonRow;
+            }
+        }
+    }
+
+    return updatedEpsilon;
 }
 
-*/
 
+// Function to trim leading and trailing whitespaces from a string
+std::string trim(const std::string& str) {
+    size_t first = str.find_first_not_of(" \t\n\r\f\v");
+    size_t last = str.find_last_not_of(" \t\n\r\f\v");
+    if (first == std::string::npos || last == std::string::npos)
+        return "";
+    return str.substr(first, (last - first + 1));
+}
+
+// Function to parse the parameter name and value from a line
+void parseLine(const std::string& line, std::string& paramName, std::string& paramValue) {
+    size_t equalPos = line.find('=');
+    if (equalPos != std::string::npos) {
+        paramName = trim(line.substr(0, equalPos));
+        paramValue = trim(line.substr(equalPos + 1));
+    }
+}
+
+// Function to fill the struct from the provided text file
+void params_loader(const std::string& filename, mband::params_param& params) {
+
+
+    // Open the file and read its contents
+    std::ifstream inputFile(filename);
+    if (!inputFile) {
+        std::cerr << "Failed to open file: " << filename << std::endl;
+        return;
+    }
+
+    std::string line;
+    while (std::getline(inputFile, line)) {
+        std::string paramName, paramValue;
+        parseLine(line, paramName, paramValue);
+
+
+        // Fill the struct based on the parameter name
+        if (paramName == "molecular")
+            params.molecular = std::stoi(paramValue);
+        else if (paramName == "E_reg")
+            params.E_reg = std::stod(paramValue);
+        else if (paramName == "lattice_type")
+            params.lattice_type = std::stoi(paramValue);
+        else if (paramName == "set_precision")
+            params.set_precision = std::stod(paramValue);
+        else if (paramName == "hatree_fock")
+            params.hatree_fock = (paramValue == "true");
+        else if (paramName == "tp")
+            params.tp = std::stod(paramValue);
+        else if (paramName == "tperp")
+            params.tperp = std::stod(paramValue);
+		 else if (paramName == "tperp_p")
+            params.tperp_p = std::stod(paramValue);
+		 else if (paramName == "molecular_type")
+            params.molecular_type = std::stoi(paramValue);
+		 else if (paramName == "max_ord")
+            params.max_ord = std::stoi(paramValue);
+		 else if (paramName == "min_ord")
+            params.min_ord = std::stoi(paramValue);
+		 else if (paramName == "MC_num")
+            params.MC_num= std::stoi(paramValue);
+		  else if (paramName == "in")
+            params.in= std::stoi(paramValue);
+		else if (paramName == "out")
+            params.out= std::stoi(paramValue);
+		else if (paramName == "molec_beta")
+            params.molec_beta= std::stod(paramValue);
+		else if (paramName == "molec_mfreq")
+            params.molec_mfreq= std::stoi(paramValue);
+		else if (paramName == "time")
+			params.time= std::stoi(paramValue);
+		else if (paramName == "V")
+			params.V= std::stod(paramValue);
+
+
+
+      
+    }
+
+    inputFile.close();
+}
 
 
 

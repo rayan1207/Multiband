@@ -131,7 +131,6 @@ std::vector<std::vector<int>> mband::findmatch(std::vector<int> v1,AmiGraph::edg
 		 matchingVectors = mband::interaction_legs;
 		
 	}
-	
 
     for (int j = 0; j < v1.size(); j++) {
         if (v1[j] != 0) {
@@ -153,11 +152,11 @@ std::vector<int> mband::external_species(AmiGraph::graph_t &graph){
 	AmiGraph::vertex_vector_t v;
 	AmiGraph::edge_vector_t edges;
 	g.find_external_vertices(graph,v,edges);
-	std::cout<<"{" << graph[edges[0]].g_struct_.species_ <<"," << graph[edges[1]].g_struct_.species_<<"}";
+	//std::cout<<"{" << graph[edges[0]].g_struct_.species_ <<"," << graph[edges[1]].g_struct_.species_<<"}";
 	return {graph[edges[0]].g_struct_.species_,graph[edges[1]].g_struct_.species_};
 }
 
-void mband::solve_multiband_4(AmiGraph::graph_t &graph,AmiGraph::edge_vector_t &fermionic_edge,std::vector<std::vector<int>> &fermionic_species,std::vector<std::vector<std::vector<int>>> &interaction_species,std::vector<std::vector<int>> &ext_legs){
+void mband::solve_multiband_4(AmiGraph::graph_t &graph,AmiGraph::edge_vector_t &fermionic_edge,std::vector<std::vector<int>> &fermionic_species,std::vector<std::vector<std::vector<int>>> &interaction_species,std::vector<std::vector<int>> &bosonic_Alpha,std::vector<std::vector<int>> &ext_legs){
     AmiGraph::edge_vector_t bvector;
 	std::vector<AmiGraph::edge_vector_t> int_vector;
 	g.find_bosonic_edges(graph,bvector);
@@ -166,6 +165,9 @@ void mband::solve_multiband_4(AmiGraph::graph_t &graph,AmiGraph::edge_vector_t &
 		//g.print_edge_info(bvector[i],gself2);
 		std::cout << "Edge = ("  << graph[source(bvector[i],graph)].index_<<"," << graph[target(bvector[i],graph)].index_ <<")" 
 		<<std::endl;
+	}
+	 for (auto b: bvector){
+		bosonic_Alpha.push_back(graph[b].g_struct_.alpha_);
 	}
 	mband::find_interaction(graph,bvector,int_vector);
 	mband::print_interactions(graph,bvector, int_vector);
@@ -225,7 +227,7 @@ void mband::solve_multiband_4(AmiGraph::graph_t &graph,AmiGraph::edge_vector_t &
 				fermionic_species.push_back(v);
 				v.clear();
 								//std::cout<<")"<<std::endl;
-								}
+								}mband::assign_label(graph,int_vector[3],initial_species_4);
 								
 							}
 							else { mband::assign_label(graph,int_vector[3],initial_species_4);}				
@@ -242,16 +244,19 @@ void mband::solve_multiband_4(AmiGraph::graph_t &graph,AmiGraph::edge_vector_t &
 		}
 	}
 	else{std::cout<< "NO match found \n";}
-//mband::print_assigned_species(interaction_species);
+mband::print_assigned_species(interaction_species);
 }
 	
 
 	
-void mband::solve_multiband_3(AmiGraph::graph_t &graph,AmiGraph::edge_vector_t &fermionic_edge,std::vector<std::vector<int>> &fermionic_species,std::vector<std::vector<std::vector<int>>> &interaction_species,std::vector<std::vector<int>> &ext_legs){
+void mband::solve_multiband_3(AmiGraph::graph_t &graph,AmiGraph::edge_vector_t &fermionic_edge,std::vector<std::vector<int>> &fermionic_species,std::vector<std::vector<std::vector<int>>> &interaction_species,std::vector<std::vector<int>> &bosonic_Alpha,std::vector<std::vector<int>> &ext_legs){
     AmiGraph::edge_vector_t bvector;
 	std::vector<AmiGraph::edge_vector_t> int_vector;
 	g.find_bosonic_edges(graph,bvector);
-	g.find_internal_fermionic_edges(graph,fermionic_edge);	
+	g.find_internal_fermionic_edges(graph,fermionic_edge);
+    for (auto b: bvector){
+		bosonic_Alpha.push_back(graph[b].g_struct_.alpha_);
+	}	
 	for (int i=0;i <bvector.size();i++){
 		//g.print_edge_info(bvector[i],gself2);
 		std::cout << "Edge = ("  << graph[source(bvector[i],graph)].index_<<"," << graph[target(bvector[i],graph)].index_ <<")" 
@@ -316,7 +321,7 @@ void mband::solve_multiband_3(AmiGraph::graph_t &graph,AmiGraph::edge_vector_t &
 			}
     }
 	else {std::cout << " No match found \n";}
-//mband::print_assigned_species(interaction_species);  
+mband::print_assigned_species(interaction_species);  
 }
 
 
@@ -325,15 +330,21 @@ void mband::solve_multiband_3(AmiGraph::graph_t &graph,AmiGraph::edge_vector_t &
 
 
 
-void mband::solve_multiband_2(AmiGraph::graph_t &graph,AmiGraph::edge_vector_t &fermionic_edge,std::vector<std::vector<int>> &fermionic_species,std::vector<std::vector<std::vector<int>>> &interaction_species,std::vector<std::vector<int>> &ext_legs){
+void mband::solve_multiband_2(AmiGraph::graph_t &graph,AmiGraph::edge_vector_t &fermionic_edge,std::vector<std::vector<int>> &fermionic_species,std::vector<std::vector<std::vector<int>>> &interaction_species,std::vector<std::vector<int>> &bosonic_Alpha,std::vector<std::vector<int>> &ext_legs){
     AmiGraph::edge_vector_t bvector;
 	std::vector<AmiGraph::edge_vector_t> int_vector;
 	g.find_bosonic_edges(graph,bvector);
 	g.find_internal_fermionic_edges(graph,fermionic_edge);
+	  for (auto b: bvector){
+		bosonic_Alpha.push_back(graph[b].g_struct_.alpha_);
+	}	
 	for (int i=0;i <bvector.size();i++){
 		//g.print_edge_info(bvector[i],gself2);
 		std::cout << "Edge = ("  << graph[source(bvector[i],graph)].index_<<"," << graph[target(bvector[i],graph)].index_ <<")" 
 		<<std::endl;
+	}
+	for (auto b: bvector){
+		print1d(graph[b].g_struct_.alpha_);
 	}
 	mband::find_interaction(graph,bvector,int_vector);
 	mband::print_interactions(graph,bvector, int_vector);
@@ -364,14 +375,14 @@ void mband::solve_multiband_2(AmiGraph::graph_t &graph,AmiGraph::edge_vector_t &
 				
 				std::cout<< fermionic_edge.size();
 				std::vector<int> v;
-				std::cout<<"(";
+				//std::cout<<"(";
 				for (int x =0; x < fermionic_edge.size(); x++){
 					v.push_back(graph[fermionic_edge[x]].g_struct_.species_);
-					std::cout<<graph[fermionic_edge[x]].g_struct_.species_;				
+					//std::cout<<graph[fermionic_edge[x]].g_struct_.species_;				
 				}
 				fermionic_species.push_back(v);
 				v.clear();
-				std::cout<<")"<<std::endl;			    
+				//std::cout<<")"<<std::endl;			    
 				}
 				mband::assign_label(graph,int_vector[1],initial_species_2);
 				
@@ -388,7 +399,7 @@ mband::print_assigned_species(interaction_species);
 }
 
 
-void mband::solve_multiband_1(AmiGraph::graph_t &graph,AmiGraph::edge_vector_t &fermionic_edge,std::vector<std::vector<int>> &fermionic_species,std::vector<std::vector<std::vector<int>>> &interaction_species,std::vector<std::vector<int>> &ext_legs){
+void mband::solve_multiband_1(AmiGraph::graph_t &graph,AmiGraph::edge_vector_t &fermionic_edge,std::vector<std::vector<int>> &fermionic_species,std::vector<std::vector<std::vector<int>>> &interaction_species,std::vector<std::vector<int>> &bosonic_Alpha,std::vector<std::vector<int>> &ext_legs){
     AmiGraph::edge_vector_t bvector;
 	std::vector<AmiGraph::edge_vector_t> int_vector;
 	g.find_bosonic_edges(graph,bvector);
@@ -398,6 +409,9 @@ void mband::solve_multiband_1(AmiGraph::graph_t &graph,AmiGraph::edge_vector_t &
 		std::cout << "Edge = ("  << graph[source(bvector[i],graph)].index_<<"," << graph[target(bvector[i],graph)].index_ <<")" 
 		<<std::endl;
 	}
+	for (auto b: bvector){
+		bosonic_Alpha.push_back(graph[b].g_struct_.alpha_);
+	}	
 	mband::find_interaction(graph,bvector,int_vector);
 	mband::print_interactions(graph,bvector, int_vector);
 	std::vector<int> initial_species_1 = mband::generate_edge_species(graph, int_vector[0]);
@@ -449,16 +463,13 @@ std::vector<AmiBase::alpha_t>  &alpha) {
 		
 		
 	}
-	
-	
-	
-	
+
 }
 
 
 
 
-void mband::solve_multiband_5(AmiGraph::graph_t &graph,AmiGraph::edge_vector_t &fermionic_edge,std::vector<std::vector<int>> &fermionic_species,std::vector<std::vector<std::vector<int>>> &interaction_species,std::vector<std::vector<int>> &ext_legs){
+void mband::solve_multiband_5(AmiGraph::graph_t &graph,AmiGraph::edge_vector_t &fermionic_edge,std::vector<std::vector<int>> &fermionic_species,std::vector<std::vector<std::vector<int>>> &interaction_species,std::vector<std::vector<int>> &bosonic_Alpha,std::vector<std::vector<int>> &ext_legs){
     AmiGraph::edge_vector_t bvector;
 	std::vector<AmiGraph::edge_vector_t> int_vector;
 	g.find_bosonic_edges(graph,bvector);
@@ -467,6 +478,9 @@ void mband::solve_multiband_5(AmiGraph::graph_t &graph,AmiGraph::edge_vector_t &
 		//g.print_edge_info(bvector[i],gself2);
 		std::cout << "Edge = ("  << graph[source(bvector[i],graph)].index_<<"," << graph[target(bvector[i],graph)].index_ <<")" 
 		<<std::endl;
+	}
+	for (auto b: bvector){
+		bosonic_Alpha.push_back(graph[b].g_struct_.alpha_);
 	}
 	mband::find_interaction(graph,bvector,int_vector);
 	mband::print_interactions(graph,bvector, int_vector);
@@ -552,18 +566,18 @@ mband::print_assigned_species(interaction_species);
 
 
 	
-void mband::solve_multiband(AmiGraph::graph_t &graph,AmiGraph::edge_vector_t &fermionic_edge,std::vector<std::vector<int>> &fermionic_species,std::vector<std::vector<std::vector<int>>> &interaction_species,std::vector<std::vector<int>> &ext_legs){
+void mband::solve_multiband(AmiGraph::graph_t &graph,AmiGraph::edge_vector_t &fermionic_edge,std::vector<std::vector<int>> &fermionic_species,std::vector<std::vector<std::vector<int>>> &interaction_species,std::vector<std::vector<int>> &bosonic_Alpha,std::vector<std::vector<int>> &ext_legs){
 int ord = g.graph_order(graph);
 if (ord == (int) 1){
- mband::solve_multiband_1(graph,fermionic_edge,fermionic_species,interaction_species,ext_legs);}
+ mband::solve_multiband_1(graph,fermionic_edge,fermionic_species,interaction_species,bosonic_Alpha,ext_legs);}
 else if (ord == (int) 2){
- mband::solve_multiband_2(graph,fermionic_edge,fermionic_species,interaction_species,ext_legs);}
+ mband::solve_multiband_2(graph,fermionic_edge,fermionic_species,interaction_species,bosonic_Alpha,ext_legs);}
 else if (ord == (int) 3){
- mband::solve_multiband_3(graph,fermionic_edge,fermionic_species,interaction_species,ext_legs);}
+ mband::solve_multiband_3(graph,fermionic_edge,fermionic_species,interaction_species,bosonic_Alpha,ext_legs);}
 else if (ord ==(int) 4){
- mband::solve_multiband_4(graph,fermionic_edge,fermionic_species,interaction_species,ext_legs);}
+ mband::solve_multiband_4(graph,fermionic_edge,fermionic_species,interaction_species,bosonic_Alpha,ext_legs);}
  else if (ord ==(int) 5){
- mband::solve_multiband_5(graph,fermionic_edge,fermionic_species,interaction_species,ext_legs);}
+ mband::solve_multiband_5(graph,fermionic_edge,fermionic_species,interaction_species,bosonic_Alpha,ext_legs);}
 else{
 std::cout << "this order not possible";}
 }
